@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F02 — Source discovery & data contracts](../features/F02-source-discovery-and-data-contracts.md) |
-| **Status** | In Review |
+| **Status** | Done |
 | **Estimate** | 3 h |
 | **Depends on** | [F02-T02](F02-T02-data-dictionary.md), [F02-T03](F02-T03-reference-data-sources.md) |
 | **Branch** | `feat/F02-T04-data-contracts-odcs` |
