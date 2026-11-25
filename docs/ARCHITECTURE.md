@@ -365,6 +365,7 @@ the Ministry's official panel in F06-T06.
 | **Always pass an explicit schema** (`StructType` generated from the contract); never `inferSchema=True` | Inference reads the data twice and guesses differently per file; explicit schemas make drift visible. |
 | Prefer **built-in functions** (`F.when`, `F.to_date`, `F.regexp_replace`) over Python UDFs | UDFs serialise each row to Python and block Catalyst optimisations — often 10–100× slower. If unavoidable, use a vectorised `pandas_udf`. |
 | Chain transforms with **`DataFrame.transform`** | Readable pipelines of small, named, tested functions. |
+| Add several columns at once with **`withColumns({...})`**, not long chains of `withColumn` | Each `withColumn` adds a projection to the plan; long chains slow down planning (warned in the PySpark docs). |
 | **Never `collect()` / `toPandas()`** a large DataFrame | Pulls all data into the driver → out-of-memory. Only for small aggregates. |
 | **Column names:** `snake_case`, English, suffixes `_at` (timestamp), `_date`, `_code`, `_pct`; booleans `is_` / `has_`; technical columns start with `_` | Consistent, self-describing schema. |
 | Use **`spark.sql.session.timeZone = America/Sao_Paulo`** explicitly; store timestamps as UTC-aware types | Avoids silent off-by-one-day errors in daily aggregates. |
@@ -377,8 +378,11 @@ the Ministry's official panel in F06-T06.
 def standardise_municipality(df: DataFrame) -> DataFrame:
     """Normalise residence municipality to 6-digit DATASUS + 7-digit IBGE codes."""
     code = F.regexp_replace(F.col("residence_municipality_raw"), r"\D", "")
-    return df.withColumn("municipality_code_6", F.substring(code, 1, 6)).withColumn(
-        "is_municipality_code_valid", F.length(code).isin(6, 7)
+    return df.withColumns(
+        {
+            "municipality_code_6": F.substring(code, 1, 6),
+            "is_municipality_code_valid": F.length(code).isin(6, 7),
+        }
     )
 
 
