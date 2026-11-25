@@ -146,3 +146,42 @@ def test_bronze_table_has_contract_comments(spark: SparkSession, settings: Setti
 
     assert list(fields)[: len(COLUMNS)] == COLUMNS
     assert "RNDS" in fields["co_documento"].metadata.get("comment", "")
+
+
+def test_crash_after_delta_commit_does_not_duplicate_on_restart(
+    spark: SparkSession, settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The hardest failure: micro-batch 1 is written to Delta, then the process dies before the
+    checkpoint records it. On restart Spark replays batch 1; the Delta transaction id
+    (txnAppId + txnVersion) makes the replayed write a no-op."""
+    from vaccination_lakehouse.ingestion import bronze_batch
+
+    land(settings, FakeServer(), mixed_month(3), '"ffff6666"')  # 4 files → 2 micro-batches of 2
+
+    real_logger = bronze_batch.logger
+
+    class CrashAfterCommit:
+        def __getattr__(self, name):
+            return getattr(real_logger, name)
+
+        def info(self, message, *args, **kwargs):
+            if message.startswith("bronze batch") and args and args[0] == 1:
+                raise RuntimeError("simulated crash after the Delta commit of batch 1")
+            real_logger.info(message, *args, **kwargs)
+
+    monkeypatch.setattr(bronze_batch, "logger", CrashAfterCommit())
+    with pytest.raises(Exception, match="simulated crash"):
+        ingest_sipni(spark, settings)
+    assert bronze(spark, settings).count() == 6  # batch 1 did reach Delta before the crash
+
+    monkeypatch.setattr(bronze_batch, "logger", real_logger)
+    restart = ingest_sipni(spark, settings)  # restart: batch 1 is replayed
+
+    assert restart.rows > 0  # Spark really re-read the files of batch 1...
+    history = spark.sql(f"DESCRIBE HISTORY delta.`{settings.paths.table_path(TABLE)}`")
+    writes = history.filter("operation = 'WRITE'").count()
+    assert writes == 2  # ...but Delta skipped the duplicate commit (batches 0 and 1 only)
+    df = bronze(spark, settings)
+    assert df.count() == 6  # not 6 + replayed rows
+    assert df.select("co_documento").distinct().count() == 6
+    assert reconcile(spark, settings) == []
