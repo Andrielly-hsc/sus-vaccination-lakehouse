@@ -33,7 +33,7 @@ Download monthly national files, streaming them through a UF filter so only the 
 
 ## Why this matters (best practice)
 
-Network calls fail; well-behaved clients retry with backoff and do not hammer public servers. Filtering while streaming keeps an 8 GB laptop viable — the same idea as predicate push-down, applied at the edge.
+Network calls fail; well-behaved clients retry with backoff and do not hammer public servers. Filtering while streaming keeps an 8 GB Codespace (and its 15 GB storage quota) viable — the same idea as predicate push-down, applied at the edge.
 
 ## Notes
 

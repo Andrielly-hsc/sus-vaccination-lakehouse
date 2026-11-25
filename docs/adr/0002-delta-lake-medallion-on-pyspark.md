@@ -24,5 +24,5 @@ We will use **PySpark (Spark 4.x, local mode)** with **Delta Lake** and organise
 - + The same code would run on Fabric or Databricks with only path/catalog changes
 - + ACID MERGE and idempotent stream writes make re-runs safe
 - + Change Data Feed enables incremental gold
-- − Spark on a laptop is heavier than DuckDB; requires Java 17 and a Linux-like environment (ADR-0007)
+- − Spark on a laptop is heavier than DuckDB; requires Java 17 and a Linux environment (GitHub Codespaces, ADR-0007)
 - − Spark and Delta versions must be kept as a compatible pair

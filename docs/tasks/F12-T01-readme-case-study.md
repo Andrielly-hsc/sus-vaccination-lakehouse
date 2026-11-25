@@ -16,7 +16,7 @@ Challenge → solution → results, with badges, diagram and screenshots.
 
 1. Headline numbers (e.g. % of municipalities below target, median registration lag)
 2. Architecture diagram and stack
-3. Quick start (Codespaces + WSL2)
+3. Quick start: "Open in GitHub Codespaces" badge + the run commands
 4. Links to docs, catalog, lineage, performance
 
 ## Acceptance criteria

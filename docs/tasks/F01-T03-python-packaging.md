@@ -5,7 +5,7 @@
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
 | **Status** | To Do |
 | **Estimate** | 1.5 h |
-| **Depends on** | [F01-T02](F01-T02-local-spark-environment.md) |
+| **Depends on** | [F01-T02](F01-T02-codespaces-dev-environment.md) |
 | **Branch** | `feat/F01-T03-python-packaging` |
 
 ## Description
