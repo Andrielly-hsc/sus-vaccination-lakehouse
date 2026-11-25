@@ -1,4 +1,4 @@
-# Development in a codespace: a small scope keeps downloads and the storage quota low.
+# Development (WSL2 or a codespace): a small scope keeps downloads and disk use low.
 # Widen it (or use VAXLAKE_SCOPE__* variables) for the full backfill.
 
 scope:

@@ -1,5 +1,6 @@
 # Hooks run on `git commit`. Install once with: pre-commit install
-# (done automatically by scripts/post_create.sh in the codespace).
+# Git, and therefore the hooks, runs on the Windows side only (ADR-0010);
+# in a codespace scripts/post_create.sh installs them automatically.
 # Run on everything with: pre-commit run --all-files
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

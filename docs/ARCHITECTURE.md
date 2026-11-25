@@ -63,13 +63,13 @@ directly to sensor data on Microsoft Fabric, Databricks or Azure IoT.
 | 3 | **Data quality by design** | Contracts and quality gates run in the pipeline; bad data is quarantined, never silently dropped. |
 | 4 | **Privacy (LGPD)** | Health data is *sensitive personal data*. Only what the indicators need is kept; small counts are suppressed in published outputs. |
 | 5 | **Reproducibility** | `git clone` → documented commands → same tables. Pinned dependencies, fixture sample for CI. |
-| 6 | **Free-tier cost** | Runs in a 2-core / 8 GB Codespace and in free GitHub Actions; no paid cloud account required. |
+| 6 | **Laptop-scale cost** | Runs on an 8 GB laptop (WSL2) and in free GitHub Actions; no paid cloud account required. |
 
 ### 1.4 Constraints
 
 - **Public, anonymised data only** (OpenDataSUS). No attempt at re-identification. See [ADR-0003](adr/0003-public-sus-vaccination-data.md).
 - National monthly files are ~1.4 GB each, so the default scope is **one region (Southeast: SP, MG, RJ, ES) and 24 months**, configurable. The scope is deliberately skewed (São Paulo ≫ Espírito Santo) to study partition skew.
-- Spark needs Java 17 and a Linux environment: development runs in **GitHub Codespaces** (dev container, 2 cores / 8 GB by default), within the free monthly quota; see [ADR-0007](adr/0007-github-codespaces-dev-environment.md).
+- Spark needs Java 17 and a Linux environment: development runs in **WSL2 Ubuntu** on an 8 GB laptop (WSL capped at 5 GB); visitors can use **GitHub Codespaces** through the dev container; see [ADR-0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md).
 - Python 3.11. All code, docs and table/column names in **English**; Portuguese source names are mapped in the data contract.
 
 ---
@@ -193,7 +193,7 @@ simulation assumption and never affects the daily/yearly indicators.
 | Testing | **pytest** (+ `pyspark.testing.assertDataFrameEqual`), GX suites | Code tested with pytest, data tested with GX. | — |
 | Lint / format | **ruff**, **pre-commit** | One fast tool for lint + format; hooks keep CI green. | — |
 | CI | **GitHub Actions** (Ubuntu, Java 17) | Free for public repos; runs Spark tests on a fixture sample. | — |
-| Dev environment | **GitHub Codespaces** with a **dev container** (`devcontainer.json`) | Dev containers are the standard way to make an environment reproducible ("environment as code"); Spark runs on Linux, as in industry, with no Windows `winutils` issues. The same file opens locally in VS Code or WSL2 if ever needed. | [0007](adr/0007-github-codespaces-dev-environment.md) |
+| Dev environment | **WSL2 Ubuntu** (development) + **dev container** for GitHub Codespaces (visitors) | Spark runs on Linux, as in industry, with no Windows `winutils` issues. The dev container is the standard way to make an environment reproducible ("environment as code") and gives reviewers a one-click environment. | [0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md) |
 
 > **Versions.** Spark and Delta Lake must be a compatible pair (see the
 > [Delta Lake releases / compatibility table](https://docs.delta.io/latest/releases.html)).
@@ -205,13 +205,13 @@ simulation assumption and never affects the daily/yearly indicators.
 
 ```text
 sus-vaccination-lakehouse/
-├── .devcontainer/devcontainer.json   # Codespaces / VS Code dev container (Java 17 + Python 3.11)
+├── .devcontainer/devcontainer.json   # dev container for Codespaces / VS Code (Java 17 + Python 3.11)
 ├── .github/
 │   ├── workflows/ci.yml              # lint → unit → spark tests → end-to-end sample
 │   └── pull_request_template.md
 ├── conf/
 │   ├── base.yaml                     # scope (UFs, months), paths, Spark settings
-│   ├── dev.yaml                      # Codespace overrides (driver memory, speed factor)
+│   ├── dev.yaml                      # development overrides (small scope, readable logs)
 │   └── ci.yaml                       # tiny fixture scope
 ├── contracts/                        # ODCS data contracts — the schema source of truth
 │   ├── source/sipni_doses.odcs.yaml
@@ -487,15 +487,16 @@ Quality is checked at every layer ("defence in depth"):
 
 - Settings: `conf/base.yaml` + environment profile + environment variables (`VAXLAKE_*`), validated with pydantic.
 - No secrets are needed (public data). The `.env` pattern is still used and `.env` is git-ignored.
-- Spark driver memory defaults to 3 GB to fit the default 2-core / 8 GB Codespace.
+- Spark driver memory defaults to 3 GB, which fits WSL2 capped at 5 GB on an 8 GB laptop (and a 2-core / 8 GB codespace).
 
 ---
 
 ## 7. Runtime view (how to run)
 
 ```bash
-# in a Codespace: "Code → Codespaces → Create codespace on main".
-# The dev container installs Java 17, Python 3.11 and the locked dependencies automatically.
+# in WSL2 Ubuntu, after the one-time `bash scripts/wsl_setup.sh` (docs/setup.md)
+vaxenv                                              # activate the venv, go to the repository
+# (visitors: "Open in GitHub Codespaces" - the dev container installs everything)
 
 vaxlake download --months 2024-01:2025-06          # → data/landing/sipni/batch (filtered to scope UFs)
 vaxlake reference                                   # IBGE, SINASC, PNI targets → bronze.ref_*
@@ -537,10 +538,10 @@ The Ivy cache (`~/.ivy2`) is cached so Delta/OpenLineage jars are not re-downloa
 | Risk | Mitigation |
 |---|---|
 | Source URLs, columns or encoding change | Contract + discovery doc; downloader fails loudly on unexpected schema; fixtures pin behaviour. |
-| Files too large for an 8 GB Codespace (RAM and 15 GB storage quota) | Filter to scope UFs while downloading; stream-process CSV; configurable scope; CI uses fixtures. |
-| Spark on Windows friction | Codespaces dev container as the official environment (ADR-0007). |
-| Codespaces quota exhausted (core-hours or 15 GB storage) | 2-core machine by default, idle timeout ≤ 30 min, small default scope, delete unused codespaces; fixtures let most work run with little data. |
-| Codespace deleted → data lost | Everything under `data/` is reproducible from source; the downloader's manifest makes a rebuild a documented command. |
+| Files too large for an 8 GB laptop | Filter to scope UFs while downloading; stream-process CSV; configurable scope; CI uses fixtures. |
+| Spark on Windows friction | WSL2 as the development environment, dev container for visitors (ADR-0010). |
+| WSL2 and dev container drift apart | Same Java/Python versions and the same lock file in both; CI checks the result. |
+| Windows slows down during heavy runs (8 GB shared) | WSL capped at 5 GB, driver ≤ 3 GB, small default scope; fixtures let most work run with little data. |
 | Indicators differ from official numbers | Reconciliation task (F06-T06) documents and explains each difference instead of hiding it. |
 | Re-identification risk | Minimisation, suppression, privacy assessment (F02-T06). |
 | Over-engineering | Every component must serve one of the four business questions; Kafka/Marquez are optional. |

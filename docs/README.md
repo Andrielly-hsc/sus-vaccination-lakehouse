@@ -25,9 +25,10 @@ each in its own Markdown file, versioned with the code.
 | [0004](adr/0004-file-based-streaming-simulation.md) | File-based streaming simulation (Kafka optional) |
 | [0005](adr/0005-great-expectations-for-data-quality.md) | Great Expectations for data quality |
 | [0006](adr/0006-odcs-data-contracts.md) | Data contracts in the Open Data Contract Standard |
-| [0007](adr/0007-github-codespaces-dev-environment.md) | GitHub Codespaces as the development environment |
+| [0007](adr/0007-github-codespaces-dev-environment.md) | ~~GitHub Codespaces as the development environment~~ (superseded by 0010) |
 | [0008](adr/0008-openlineage-for-lineage.md) | OpenLineage for lineage, catalog as code |
 | [0009](adr/0009-spark-and-delta-version-pins.md) | Pin Spark 4.1 with Delta Lake 4.4 |
+| [0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md) | WSL2 for development, dev container for visitors |
 
 ## Backlog
 

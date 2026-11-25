@@ -1,76 +1,114 @@
 # Development environment setup
 
-The project runs in **GitHub Codespaces**: a Linux virtual machine in the cloud, built from
-[`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json). Nothing needs to be
-installed on your own computer — a browser is enough (VS Code desktop is optional).
-Why this choice: [ADR-0007](adr/0007-github-codespaces-dev-environment.md).
+Two ways to run the project, for two audiences ([ADR-0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md)):
 
-## 1. Create a codespace
-
-1. On the repository page: **Code → Codespaces → Create codespace on main**
-   (or a branch you are working on).
-2. Machine type: **2-core** (default, enough for development). Use 4-core only for heavy runs.
-3. The first build takes a few minutes. It installs Java 17 (Temurin), Python 3.11 and the
-   project's locked dependencies (`scripts/post_create.sh`).
-4. Check it worked, in the codespace terminal:
-
-   ```bash
-   java -version        # openjdk 17...
-   python --version     # Python 3.11...
-   pyspark --version    # after F01-T03
-   pytest               # after F01-T06
-   ```
-
-## 2. Daily use
-
-| Action | How |
-|---|---|
-| Reopen | github.com/codespaces → click the codespace (state, files and `data/` are kept) |
-| **Stop** when you finish | github.com/codespaces → `…` → *Stop codespace* (or let the idle timeout stop it) |
-| Open in VS Code desktop | `…` → *Open in Visual Studio Code* (needs the *GitHub Codespaces* extension) |
-| Spark UI | While a Spark job runs, open the **PORTS** tab → port **4040** (“Spark UI”) |
-| Dashboard | Port **8501** (“Streamlit dashboard”), from F11 |
-| Rebuild after changing `.devcontainer/` | Command palette → *Codespaces: Rebuild Container* |
-
-## 3. Managing the free quota
-
-Personal accounts get a monthly free quota of **core-hours** and **storage** (GitHub Free: 120
-core-hours and 15 GB-month at the time of writing — check
-[GitHub's billing docs](https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-codespaces/about-billing-for-github-codespaces)).
-A 2-core machine running for 1 hour uses 2 core-hours, so the free quota is about **60 hours
-a month** on the default machine.
-
-- Set the idle timeout to **30 minutes**: github.com/settings/codespaces → *Default idle timeout*.
-- Set a **spending limit of 0** (the default for personal accounts) so you are never charged.
-- **Stop** the codespace at the end of each session; **delete** codespaces you no longer use
-  (storage is billed while a codespace exists, even when stopped).
-- Keep the data scope small during development (`conf/dev.yaml`); the full Southeast backfill
-  is done once.
-- Check usage: github.com/settings/billing → *Codespaces*.
-
-## 4. Where things live
-
-| Path in the codespace | Content | In git? |
+| Who | Environment | Section |
 |---|---|---|
-| `/workspaces/sus-vaccination-lakehouse` | The repository | yes |
-| `…/data/landing`, `…/data/lakehouse`, `…/data/checkpoints` | Downloaded files, Delta tables, streaming state | **no** (git-ignored) |
-| `~/.ivy2` | Delta / OpenLineage JARs downloaded by Spark | no |
+| The author, developing | **WSL2 Ubuntu** on the Windows laptop | [1](#1-wsl2-development-environment) |
+| Visitors and reviewers | **GitHub Codespaces** (dev container, zero install) | [2](#2-github-codespaces-for-visitors) |
 
-Deleting the codespace deletes `data/`. Everything there can be rebuilt from the public
-sources with the pipeline commands (see the runbook, F10).
+Both use Java 17, Python 3.11 and the same `requirements-lock.txt`; CI checks the same versions.
+Native Windows is not supported (Spark needs Hadoop `winutils` there).
 
-## 5. Common problems
+---
+
+## 1. WSL2 development environment
+
+### 1.1 Install WSL2 and Ubuntu (once, needs admin rights)
+
+In **PowerShell as Administrator**:
+
+```powershell
+wsl --install -d Ubuntu-24.04
+```
+
+Restart Windows when asked. Ubuntu then opens and asks for a **Linux user name and password**
+(they are independent from your Windows account; the password is used by `sudo`).
+
+### 1.2 Cap WSL's memory (recommended on an 8 GB laptop)
+
+WSL may otherwise take up to half of the RAM and keep it. Create `%UserProfile%\.wslconfig`:
+
+```ini
+[wsl2]
+memory=5GB
+swap=4GB
+```
+
+Apply it with `wsl --shutdown` in PowerShell (Ubuntu restarts on next use).
+
+### 1.3 Install the project inside Ubuntu
+
+In the Ubuntu terminal:
+
+```bash
+cd "/mnt/d/Pos_Ciencia-de-dados/Portifólio/sus-vaccination-lakehouse"
+bash scripts/wsl_setup.sh
+source ~/.bashrc
+```
+
+The script ([`scripts/wsl_setup.sh`](../scripts/wsl_setup.sh)) installs OpenJDK 17 and Python 3.11,
+creates the virtual environment in `~/.venvs/vaxlake`, installs the locked dependencies and adds a
+`vaxenv` shortcut plus `JAVA_HOME` and `VAXLAKE_PATHS__DATA_DIR` to `~/.bashrc`.
+
+### 1.4 Check it works
+
+```bash
+vaxenv                 # activate the venv and go to the repository
+java -version          # openjdk 17...
+vaxlake info           # versions and active profile
+pytest                 # unit + Spark tests, nothing skipped
+vaxlake smoke-test     # starts Spark, writes and reads a Delta table
+```
+
+### 1.5 Where things live
+
+| What | Where | Why |
+|---|---|---|
+| Code (git repository) | `D:\Pos_Ciencia-de-dados\Portifólio\sus-vaccination-lakehouse` = `/mnt/d/...` in Ubuntu | Editable from Windows (VS Code, Explorer) |
+| Virtual environment | `~/.venvs/vaxlake` (Linux filesystem) | Thousands of small files: fast only on ext4 |
+| Data, Delta tables, checkpoints, metastore | `~/vaxlake-data` (`VAXLAKE_PATHS__DATA_DIR`) | Spark I/O through `/mnt/d` is several times slower |
+| Spark/Delta JARs | `~/.ivy2.5.2` | Downloaded once on the first Spark start |
+
+From Windows, the Linux files are visible in Explorer at `\\wsl$\Ubuntu-24.04\home\<user>`.
+
+### 1.6 Working rules
+
+- **Run git on the Windows side only** (PowerShell, VS Code, GitHub Desktop). Mixing Windows and
+  Linux git on the same folder creates false "file mode" changes and can break the pre-commit hook.
+- Run **Spark, pytest and `vaxlake`** in Ubuntu.
+- Spark UI: while a job runs, open <http://localhost:4040> in the Windows browser (WSL forwards it).
+- If Windows becomes slow during a heavy run, lower `spark.driver.memory`
+  (`VAXLAKE_SPARK__DRIVER_MEMORY=2g`) or close other applications.
+
+### 1.7 Common problems
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `java.lang.OutOfMemoryError` / codespace freezes | Driver memory too high for 8 GB, or `collect()`/`toPandas()` on a large DataFrame | Keep `spark.driver.memory` ≤ 3g (`conf/dev.yaml`); aggregate before collecting |
-| First Spark start is slow | Delta JARs are downloaded to `~/.ivy2` once | Wait; later starts are fast |
-| `JAVA_HOME is not set` | Container built without the Java feature | Rebuild the container |
-| "You have used your included usage" | Quota exhausted | Wait for the monthly reset; stop/delete idle codespaces |
-| Port 4040 not listed | No Spark job is running (the UI exists only while a SparkSession is alive) | Start a job, or use a notebook with an open session |
+| `wsl --install` says virtualisation is disabled | Virtualisation off in BIOS/UEFI | Enable *Intel VT-x / AMD-V* in the BIOS, retry |
+| `java.lang.OutOfMemoryError` / Ubuntu freezes | Driver memory too high for the WSL cap, or `collect()`/`toPandas()` on a large DataFrame | Keep driver memory ≤ 3g with `memory=5GB`; aggregate before collecting |
+| First Spark start is slow | Delta JARs downloaded to `~/.ivy2.5.2` | Wait once; later starts are fast |
+| `JAVA_HOME is not set` | New terminal did not load `~/.bashrc` | `source ~/.bashrc`, or re-run the setup script |
+| Pipeline very slow | Data on `/mnt/d` instead of `~/vaxlake-data` | Check `echo $VAXLAKE_PATHS__DATA_DIR` |
+| Tests skipped with "Java 17 not found" | Running pytest from Windows instead of Ubuntu | Run it in Ubuntu |
 
-## 6. Running locally instead (optional)
+---
 
-The same dev container works on any machine with Docker and VS Code (*Dev Containers:
-Reopen in Container*), or on WSL2 Ubuntu with Java 17 and Python 3.11 installed manually.
-Native Windows is not supported (Spark needs Hadoop `winutils` there).
+## 2. GitHub Codespaces (for visitors)
+
+Anyone can run the project without installing anything:
+
+1. On the repository page click **Open in GitHub Codespaces** (README badge), or
+   **Code → Codespaces → Create codespace on main**. Choose the 2-core machine.
+2. The dev container ([`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json))
+   installs Java 17 (Temurin), Python 3.11 and the locked dependencies (`scripts/post_create.sh`).
+3. In the codespace terminal: `pytest` and `vaxlake smoke-test`. The Spark UI is in the
+   **PORTS** tab (port 4040).
+
+A codespace runs on the free quota **of the person who creates it** (GitHub Free: 120 core-hours
+and 15 GB-month per month at the time of writing — see
+[GitHub's billing docs](https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-codespaces/about-billing-for-github-codespaces)).
+Stop it when finished and delete it when no longer needed; data inside it (`data/`) is lost on
+deletion but can be rebuilt with the pipeline commands.
+
+The same dev container also opens locally with Docker and VS Code (*Dev Containers: Reopen in Container*).

@@ -23,7 +23,9 @@ IN_CI = os.environ.get("CI", "").lower() == "true"
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    skip_no_java = pytest.mark.skip(reason="Java 17 not found - Spark tests run in CI/Codespaces")
+    skip_no_java = pytest.mark.skip(
+        reason="Java 17 not found - run Spark tests in WSL2 (see docs/setup.md)"
+    )
     for item in items:
         if "spark" in getattr(item, "fixturenames", ()):
             item.add_marker(pytest.mark.spark)
