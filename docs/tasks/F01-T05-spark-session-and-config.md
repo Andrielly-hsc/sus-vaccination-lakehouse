@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 2 h |
 | **Depends on** | [F01-T03](F01-T03-python-packaging.md) |
 | **Branch** | `feat/F01-T05-spark-session-and-config` |
@@ -41,4 +41,6 @@ Duplicated `SparkSession.builder` code across jobs, tests and notebooks drifts a
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Settings priority: init kwargs > `VAXLAKE_*` env (nested with `__`) > `.env` > `conf/<profile>.yaml` > `conf/base.yaml` (custom deep-merging YAML source). `extra='forbid'` turns YAML typos into errors.
+- CLI exits with code 2 and a readable message on invalid configuration (e.g. unknown UF).
+- `vaxlake smoke-test` is the executable acceptance check: writes and reads a Delta table and reads its history.

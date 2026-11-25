@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 1.5 h |
 | **Depends on** | [F01-T05](F01-T05-spark-session-and-config.md) |
 | **Branch** | `feat/F01-T06-test-scaffolding` |
@@ -36,4 +36,7 @@ Starting a JVM per test makes a Spark suite unusable. One session per run with t
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Tests run with the `ci` profile. Tests using the `spark` fixture get the `spark` marker automatically; without Java they are **skipped locally with a visible reason, but never in CI** (`CI=true`).
+- Includes a miniature MERGE idempotency test — the core promise of the silver layer.
+- Local run (Windows, no Java): 22 passed, 3 Spark tests skipped, 85 % coverage.
+- In WSL2 the 3 Spark tests took 60 s, mostly Delta's log replay with 50 partitions per tiny table. Setting `spark.databricks.delta.snapshotPartitions` to 2 in the `ci` profile (8 in `base`) brought the **whole suite to 46 s** (MERGE 20 s -> 6 s, measured).

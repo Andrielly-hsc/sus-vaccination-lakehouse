@@ -1,0 +1,17 @@
+# Continuous integration: tiny fixtures only, never downloads from OpenDataSUS.
+
+scope:
+  ufs: [ES]
+  start_month: "2025-01"
+  end_month: "2025-01"
+
+spark:
+  master: "local[2]"
+  driver_memory: 1g
+  shuffle_partitions: 2
+  ui_enabled: false
+  catalog: in-memory        # no Derby metastore files between test sessions
+  extra_conf:
+    # Tiny test tables: fewer partitions for Delta's log replay (MERGE 20 s -> 6 s measured).
+    spark.databricks.delta.snapshotPartitions: "2"
+    spark.default.parallelism: "2"

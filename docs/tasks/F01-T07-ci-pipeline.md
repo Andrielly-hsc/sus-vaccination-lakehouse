@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 2 h |
 | **Depends on** | [F01-T04](F01-T04-code-quality-tooling.md), [F01-T06](F01-T06-test-scaffolding.md) |
 | **Branch** | `feat/F01-T07-ci-pipeline` |
@@ -34,4 +34,5 @@ CI is the referee: `main` is only as trustworthy as the checks that guard it. Le
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Jobs: `Lint (pre-commit)` → `Tests (unit + Spark)` (Temurin 17, pip cache, Ivy cache for the Delta JARs at `~/.ivy2.5.2`) → CLI smoke test.
+- First run: PR [#1](https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/pull/1).

@@ -1,0 +1,29 @@
+# Settings shared by every profile. Profiles (dev.yaml, ci.yaml) override only what differs.
+# Environment variables override both, e.g. VAXLAKE_SPARK__DRIVER_MEMORY=2g.
+
+scope:
+  # Southeast region: deliberately skewed (SP >> ES) to study partition skew (ADR-0003).
+  ufs: [SP, MG, RJ, ES]
+  start_month: "2024-01"
+  end_month: "2025-12"
+
+paths:
+  data_dir: data            # landing/, lakehouse/, checkpoints/, metastore/ live below it
+
+spark:
+  app_name: vaccination-lakehouse
+  master: "local[*]"
+  driver_memory: 3g         # fits WSL2 capped at 5 GB on an 8 GB laptop
+  shuffle_partitions: 8     # Spark's default (200) is far too many for one machine
+  timezone: America/Sao_Paulo
+  ui_enabled: true          # Spark UI on port 4040
+  catalog: hive             # persistent local catalog (Derby) under data/metastore
+  log_level: WARN
+  extra_conf:
+    # Delta reads its transaction log with 50 partitions by default, sized for clusters.
+    # Our logs are small, so fewer partitions avoid scheduling dozens of tiny tasks.
+    spark.databricks.delta.snapshotPartitions: "8"
+
+logging:
+  level: INFO
+  json_format: true

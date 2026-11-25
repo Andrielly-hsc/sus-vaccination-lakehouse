@@ -9,7 +9,7 @@ There is no public live feed of vaccination records, so one must be simulated. O
 
 | Option | Pros | Cons |
 |---|---|---|
-| **Kafka / Redpanda** in Docker | Industry-standard message broker; offsets, partitions | Docker + broker inside an 8 GB Codespace; more moving parts in CI |
+| **Kafka / Redpanda** in Docker | Industry-standard message broker; offsets, partitions | Docker + broker on an 8 GB laptop; more moving parts in CI |
 | **Azure Event Hubs / IoT Hub** | Matches Fabric/Azure | Cloud account and cost |
 | **JSON files written to a landing folder** + Spark file source | Zero infrastructure; replayable; deterministic in tests; same Structured Streaming semantics (offsets = files, checkpoint, exactly-once) | Not a real broker; latency of seconds |
 

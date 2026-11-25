@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 1 h |
 | **Depends on** | [F01-T03](F01-T03-python-packaging.md) |
 | **Branch** | `feat/F01-T04-code-quality-tooling` |
@@ -33,4 +33,5 @@ Automated formatting ends style discussions; hooks catch problems before CI, kee
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- `ruff format` also formats Python code blocks inside Markdown: the ARCHITECTURE example was rewritten with `withColumns({...})` so it stays readable (and documents a real best practice).
+- Added `detect-private-key` hook; `check-added-large-files` at 500 kB keeps data out of git.

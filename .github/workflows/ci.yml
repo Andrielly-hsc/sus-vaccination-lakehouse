@@ -1,0 +1,83 @@
+# Continuous Integration: runs on every push to main and on every pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Least privilege: the workflow only needs to read the code.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the run that is still in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VAXLAKE_PROFILE: ci       # tiny scope, small Spark (conf/ci.yaml); CI never downloads real data
+  PYTHON_VERSION: "3.11"
+  JAVA_VERSION: "17"
+
+jobs:
+  lint:
+    name: Lint (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - run: pip install pre-commit
+      - run: pre-commit run --all-files --show-diff-on-failure
+
+  test:
+    name: Tests (unit + Spark)
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same JDK distribution and version as the dev container (Temurin 17).
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      # Spark downloads the Delta JARs from Maven on first start; cache them between runs.
+      # Spark 4 keeps its Ivy cache in ~/.ivy2.5.2 (older versions used ~/.ivy2).
+      - name: Cache Spark packages (Ivy)
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.ivy2.5.2
+            ~/.ivy2
+          key: ivy-${{ runner.os }}-${{ hashFiles('requirements-lock.txt') }}
+
+      - name: Install locked dependencies and the package
+        run: |
+          pip install -r requirements-lock.txt
+          pip install -e . --no-deps
+
+      - name: Run tests with coverage
+        run: pytest --cov-report=xml
+
+      - name: Smoke-test the CLI (Spark + Delta end to end)
+        run: |
+          vaxlake --version
+          vaxlake info
+          vaxlake smoke-test
