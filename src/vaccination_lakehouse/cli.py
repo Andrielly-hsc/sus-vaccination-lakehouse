@@ -149,3 +149,18 @@ def ingest(
             typer.secho(f"  ✗ {problem}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1)
     typer.secho("  ✓ every landing file reconciles with bronze", fg=typer.colors.GREEN)
+
+
+@app.command()
+def reference(
+    force: bool = typer.Option(False, "--force", help="Download again even if unchanged."),
+) -> None:
+    """Load IBGE municipalities, SINASC live births (aggregated) and seeds into bronze."""
+    settings = _load_settings()
+    configure_logging(settings.logging.level, settings.logging.json_format)
+    from vaccination_lakehouse.ingestion.reference import ingest_reference
+    from vaccination_lakehouse.spark import get_spark
+
+    spark = get_spark(settings, app_name="vaxlake-reference")
+    for result in ingest_reference(spark, settings, force=force):
+        typer.echo(f"{result.name:<22} {result.status:<11} {result.rows:>8,} rows")

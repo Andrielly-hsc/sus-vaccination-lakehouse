@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-from delta.tables import DeltaTable
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 
@@ -34,6 +33,7 @@ from vaccination_lakehouse.ingestion.landing import (
     sipni_batch_dir,
     sipni_dir,
 )
+from vaccination_lakehouse.lakehouse import ensure_table
 from vaccination_lakehouse.logging_setup import RUN_ID
 
 logger = logging.getLogger(__name__)
@@ -51,18 +51,6 @@ class LandingIntegrityError(RuntimeError):
 class IngestResult:
     batches: int
     rows: int
-
-
-def ensure_table(spark: SparkSession, contract: SchemaObject, path: Path) -> None:
-    """Create the Delta table with the contract's columns, comments and partitioning."""
-    builder = DeltaTable.createIfNotExists(spark).location(str(path))
-    for prop in contract.properties:
-        builder = builder.addColumn(
-            prop.name, prop.spark_type(), nullable=not prop.required, comment=prop.description
-        )
-    builder = builder.partitionedBy(*contract.partition_columns)
-    builder = builder.comment(contract.description).property("layer", "bronze")
-    builder.property("contract_id", "vaxlake-bronze-sipni-doses-raw").execute()
 
 
 def read_landing(spark: SparkSession, settings: Settings, contract: SchemaObject) -> DataFrame:
@@ -125,7 +113,9 @@ def ingest_sipni(
         shutil.rmtree(checkpoint, ignore_errors=True)
         checkpoint.parent.joinpath(f"{checkpoint.name}.txn_app_id").unlink(missing_ok=True)
 
-    ensure_table(spark, contract, path)
+    ensure_table(
+        spark, contract, path, {"layer": "bronze", "contract_id": "vaxlake-bronze-sipni-doses-raw"}
+    )
     manifest = Manifest(sipni_dir(settings.paths.landing_dir) / MANIFEST_NAME)
     app_id = _txn_app_id(checkpoint)
     columns = contract.columns
