@@ -3,7 +3,7 @@ apiVersion: v3.2.0
 kind: DataContract
 id: vaxlake-bronze-sipni-doses-raw
 name: Bronze SI-PNI doses (raw)
-version: 0.1.0
+version: 0.2.0
 status: proposed
 domain: public-health-immunisation
 dataProduct: sus-vaccination-lakehouse
@@ -11,8 +11,9 @@ description:
   purpose: Faithful, append-only copy of every landing file of the SI-PNI source, as text, with provenance
     columns, so that silver can always be rebuilt and any number traced to its file.
   usage: Read only by the silver jobs. Not for analysis.
-  limitations: 'All columns are strings; no deduplication, no validation beyond the file contract. Contains
-    pseudonymous and sensitive columns: never exposed outside the lakehouse.'
+  limitations: 'All source columns are strings and optional: bronze stores whatever arrives (requiredness
+    is enforced in silver). No deduplication. Contains pseudonymous and sensitive columns: never exposed
+    outside the lakehouse.'
 servers:
 - server: lakehouse-local
   type: local
@@ -31,7 +32,7 @@ schema:
   - name: co_documento
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: id
     description: Identifier (UUID) of the FHIR document in the RNDS; one per dose record.
     criticalDataElement: true
@@ -41,7 +42,7 @@ schema:
   - name: co_paciente
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: pseudonym
     description: Pseudonymous patient identifier assigned by the RNDS (hash).
     transformSourceObjects:
@@ -50,7 +51,7 @@ schema:
   - name: tp_sexo_paciente
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: quasi
     description: 'Biological sex: F, M or I (indeterminate).'
     transformSourceObjects:
@@ -160,7 +161,7 @@ schema:
   - name: co_cnes_estabelecimento
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: org
     description: Health facility code in the national registry (CNES), 7 digits.
     transformSourceObjects:
@@ -187,7 +188,7 @@ schema:
   - name: co_municipio_estabelecimento
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: org
     description: Facility municipality, 6-digit DATASUS code.
     transformSourceObjects:
@@ -205,7 +206,7 @@ schema:
   - name: sg_uf_estabelecimento
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: org
     description: Facility UF acronym.
     transformSourceObjects:
@@ -223,7 +224,7 @@ schema:
   - name: co_vacina
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Vaccine (immunobiological) code.
     transformSourceObjects:
@@ -232,7 +233,7 @@ schema:
   - name: sg_imunobiologico
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: 'Vaccine acronym (PDF name: sg_vacina).'
     transformSourceObjects:
@@ -241,7 +242,7 @@ schema:
   - name: dt_vacina
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Vaccination date, YYYY-MM-DD (event time).
     transformSourceObjects:
@@ -250,7 +251,7 @@ schema:
   - name: co_dose_vacina
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Dose code.
     transformSourceObjects:
@@ -259,7 +260,7 @@ schema:
   - name: ds_tipo_dose
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: 'Dose description, e.g. ''1ª Dose'', ''Única'', ''Reforço'' (PDF name: ds_dose_vacina).'
     transformSourceObjects:
@@ -322,7 +323,7 @@ schema:
   - name: dt_entrada_rnds
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Date the record entered the RNDS, YYYY-MM-DD (processing time; a date, not a timestamp).
     transformSourceObjects:
@@ -331,7 +332,7 @@ schema:
   - name: co_sistema_origem
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Code of the source system installation that sent the record.
     transformSourceObjects:
@@ -349,7 +350,7 @@ schema:
   - name: st_documento
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: Document status (only 'final' observed).
     transformSourceObjects:
@@ -439,7 +440,7 @@ schema:
   - name: ds_nome
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: operational
     description: 'Vaccine full name (PDF name: ds_vacina).'
     transformSourceObjects:
@@ -493,7 +494,7 @@ schema:
   - name: nu_idade_paciente
     logicalType: string
     physicalType: string
-    required: true
+    required: false
     classification: quasi
     description: Age in whole years at vaccination (0 = under one year).
     transformSourceObjects:

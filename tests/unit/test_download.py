@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import gzip
-import io
 import urllib.error
 from pathlib import Path
 
 import pytest
 
-from sipni_fake import COLUMNS, csv_bytes, mixed_month, row, zip_bytes
+from sipni_fake import COLUMNS, FakeServer, csv_bytes, mixed_month, row, zip_bytes
 from vaccination_lakehouse.config import Settings
 from vaccination_lakehouse.ingestion.download import (
     HttpClient,
@@ -21,44 +20,6 @@ from vaccination_lakehouse.ingestion.download import (
     sipni_url,
 )
 from vaccination_lakehouse.ingestion.landing import MANIFEST_NAME, Manifest, atomic_write
-
-
-class FakeResponse(io.BytesIO):
-    def __init__(self, body: bytes, headers: dict[str, str], status: int = 200) -> None:
-        super().__init__(body)
-        self.headers, self.status = headers, status
-
-
-class FakeServer:
-    """Serves one object per URL with HEAD, GET and Range; can fail on demand."""
-
-    def __init__(self) -> None:
-        self.objects: dict[str, tuple[bytes, str]] = {}
-        self.fail_next: list[Exception] = []
-        self.cut_next_body_at: int | None = None
-        self.requests: list[tuple[str, str, str | None]] = []
-
-    def publish(self, url: str, body: bytes, etag: str) -> None:
-        self.objects[url] = (body, etag)
-
-    def __call__(self, request, timeout: int) -> FakeResponse:
-        url, method = request.full_url, request.get_method()
-        byte_range = request.headers.get("Range")
-        self.requests.append((method, url, byte_range))
-        if self.fail_next:
-            raise self.fail_next.pop(0)
-        if url not in self.objects:
-            raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
-        body, etag = self.objects[url]
-        headers = {"Content-Length": str(len(body)), "ETag": etag, "Last-Modified": "today"}
-        if method == "HEAD":
-            return FakeResponse(b"", headers)
-        status = 200
-        if byte_range:
-            body, status = body[int(byte_range.split("=")[1].rstrip("-")) :], 206
-        if self.cut_next_body_at is not None:
-            body, self.cut_next_body_at = body[: self.cut_next_body_at], None
-        return FakeResponse(body, headers, status)
 
 
 @pytest.fixture
