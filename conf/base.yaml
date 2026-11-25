@@ -19,6 +19,10 @@ spark:
   ui_enabled: true          # Spark UI on port 4040
   catalog: hive             # persistent local catalog (Derby) under data/metastore
   log_level: WARN
+  extra_conf:
+    # Delta reads its transaction log with 50 partitions by default, sized for clusters.
+    # Our logs are small, so fewer partitions avoid scheduling dozens of tiny tasks.
+    spark.databricks.delta.snapshotPartitions: "8"
 
 logging:
   level: INFO
