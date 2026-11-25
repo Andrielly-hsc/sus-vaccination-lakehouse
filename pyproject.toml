@@ -47,3 +47,27 @@ Repository = "https://github.com/Andrielly-hsc/sus-vaccination-lakehouse"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vaccination_lakehouse"]
+
+# ---------------------------------------------------------------------------
+# ruff: linter + formatter (replaces flake8, isort, black)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes (unused imports, undefined names)
+    "I",       # isort (import order)
+    "B",       # flake8-bugbear (likely bugs)
+    "UP",      # pyupgrade (modern syntax)
+    "SIM",     # flake8-simplify
+    "N",       # pep8-naming
+]
+# B008: typer declares CLI options as default arguments (typer.Option(...)) by design.
+ignore = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vaccination_lakehouse"]
