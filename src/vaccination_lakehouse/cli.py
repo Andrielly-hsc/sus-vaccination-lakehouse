@@ -92,3 +92,33 @@ def smoke_test() -> None:
         f"OK - Spark {spark.version} wrote and read a Delta table (version {version}).",
         fg=typer.colors.GREEN,
     )
+
+
+def _parse_months(value: str | None) -> list[str] | None:
+    """``2025-01`` or ``2025-01:2025-03`` → list of months; None → configured scope."""
+    if not value:
+        return None
+    from vaccination_lakehouse.ingestion.download import months_between
+
+    start, _, end = value.partition(":")
+    return months_between(start, end or start)
+
+
+@app.command()
+def download(
+    months: str = typer.Option(
+        None, "--months", help="YYYY-MM or YYYY-MM:YYYY-MM (default: the configured scope)."
+    ),
+    force: bool = typer.Option(False, "--force", help="Download again even if already landed."),
+) -> None:
+    """Download SI-PNI months and land the rows of the scope UFs (gzip CSV parts + manifest)."""
+    settings = _load_settings()
+    configure_logging(settings.logging.level, settings.logging.json_format)
+    from vaccination_lakehouse.ingestion.download import download as run_download
+
+    results = run_download(settings, _parse_months(months), force=force)
+    for result in results:
+        typer.echo(
+            f"{result.month}  {result.status:<10} {result.rows_kept:>12,} rows  "
+            f"{result.files} files"
+        )
