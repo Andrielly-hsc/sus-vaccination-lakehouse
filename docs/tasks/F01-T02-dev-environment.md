@@ -24,7 +24,7 @@ GitHub Codespaces environment ([ADR-0010](../adr/0010-wsl2-for-development-dev-c
 
 ## Acceptance criteria
 
-- [ ] In WSL2, after `bash scripts/wsl_setup.sh`: `java -version` = 17, `pytest` runs **without skipped Spark tests**, `vaxlake smoke-test` passes
+- [x] In WSL2, after `bash scripts/wsl_setup.sh`: `java -version` = 17, `pytest` runs **without skipped Spark tests**, `vaxlake smoke-test` passes
 - [ ] A new codespace opens with Java 17 and Python 3.11 and the project installed, with no manual step
 - [ ] `docs/setup.md` lets someone else reproduce either environment
 
@@ -48,4 +48,6 @@ workflow — here, fast local iterations — instead of by fashion is part of th
 - First version chose Codespaces for development ([ADR-0007](../adr/0007-github-codespaces-dev-environment.md)). Before any work was done in it, the author switched to **WSL2** ([ADR-0010](../adr/0010-wsl2-for-development-dev-container-for-visitors.md)): Spark can then run locally in seconds instead of only through CI, with no quota. The dev container stays for visitors, who use their own Codespaces quota.
 - Code stays on `D:` (edited from Windows); the venv and all data live on the Linux filesystem because Spark I/O through `/mnt/d` is several times slower.
 - Git hooks are installed from Windows only; a hook installed from WSL would point to a Linux Python and break Windows commits.
-- Pending verification: the author installs WSL2 (admin rights, reboot, Linux password), then runs the setup script; the dev container is checked the first time a codespace is opened.
+- Installation needed two Windows restarts: the *Virtual Machine Platform* component was off, so WSL2 could not start until it was enabled. An old Ubuntu 20.04 on WSL1 was the default distribution, so the first run of the script went there (and `sudo` asked for that distribution's user); the script now refuses to run outside WSL2 + Ubuntu 24.04.
+- **Verified in WSL2** (Ubuntu 24.04, OpenJDK 17.0.21, Python 3.11.18, WSL capped at 5 GB): `pytest` 25 passed, none skipped; `vaxlake smoke-test` OK with the `dev` profile (Derby metastore and data in `~/vaxlake-data`).
+- The dev container is still unverified in a real codespace; CI uses the same versions.
