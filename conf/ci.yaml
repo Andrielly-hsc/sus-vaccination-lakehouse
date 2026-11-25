@@ -1,0 +1,13 @@
+# Continuous integration: tiny fixtures only, never downloads from OpenDataSUS.
+
+scope:
+  ufs: [ES]
+  start_month: "2025-01"
+  end_month: "2025-01"
+
+spark:
+  master: "local[2]"
+  driver_memory: 1g
+  shuffle_partitions: 2
+  ui_enabled: false
+  catalog: in-memory        # no Derby metastore files between test sessions
