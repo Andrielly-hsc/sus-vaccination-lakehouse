@@ -122,3 +122,30 @@ def download(
             f"{result.month}  {result.status:<10} {result.rows_kept:>12,} rows  "
             f"{result.files} files"
         )
+
+
+@app.command()
+def ingest(
+    full_refresh: bool = typer.Option(
+        False, "--full-refresh", help="Delete bronze and its checkpoint, then reload all landing."
+    ),
+    yes: bool = typer.Option(False, "--yes", help="Confirm --full-refresh without prompting."),
+) -> None:
+    """Load new landing files into bronze (exactly once) and reconcile with the manifest."""
+    settings = _load_settings()
+    configure_logging(settings.logging.level, settings.logging.json_format)
+    if full_refresh and not yes:
+        typer.confirm("Delete bronze.sipni_doses_raw and reload everything?", abort=True)
+
+    from vaccination_lakehouse.ingestion.bronze_batch import ingest_sipni, reconcile
+    from vaccination_lakehouse.spark import get_spark
+
+    spark = get_spark(settings, app_name="vaxlake-ingest")
+    result = ingest_sipni(spark, settings, full_refresh=full_refresh)
+    problems = reconcile(spark, settings)
+    typer.echo(f"bronze.sipni_doses_raw: +{result.rows:,} rows in {result.batches} micro-batches")
+    if problems:
+        for problem in problems:
+            typer.secho(f"  ✗ {problem}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1)
+    typer.secho("  ✓ every landing file reconciles with bronze", fg=typer.colors.GREEN)

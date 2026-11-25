@@ -7,6 +7,7 @@ lists. Used by the downloader, landing and bronze tests.
 from __future__ import annotations
 
 import io
+import urllib.error
 import zipfile
 from pathlib import Path
 
@@ -85,3 +86,41 @@ def mixed_month(n_per_uf: int = 3, month: str = "2025-01") -> list[dict[str, str
             index += 1
             rows.append(row(index, sg_uf_estabelecimento=uf, dt_vacina=f"{month}-15"))
     return rows
+
+
+class FakeResponse(io.BytesIO):
+    def __init__(self, body: bytes, headers: dict[str, str], status: int = 200) -> None:
+        super().__init__(body)
+        self.headers, self.status = headers, status
+
+
+class FakeServer:
+    """Serves one object per URL with HEAD, GET and Range; can fail on demand."""
+
+    def __init__(self) -> None:
+        self.objects: dict[str, tuple[bytes, str]] = {}
+        self.fail_next: list[Exception] = []
+        self.cut_next_body_at: int | None = None
+        self.requests: list[tuple[str, str, str | None]] = []
+
+    def publish(self, url: str, body: bytes, etag: str) -> None:
+        self.objects[url] = (body, etag)
+
+    def __call__(self, request, timeout: int) -> FakeResponse:
+        url, method = request.full_url, request.get_method()
+        byte_range = request.headers.get("Range")
+        self.requests.append((method, url, byte_range))
+        if self.fail_next:
+            raise self.fail_next.pop(0)
+        if url not in self.objects:
+            raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+        body, etag = self.objects[url]
+        headers = {"Content-Length": str(len(body)), "ETag": etag, "Last-Modified": "today"}
+        if method == "HEAD":
+            return FakeResponse(b"", headers)
+        status = 200
+        if byte_range:
+            body, status = body[int(byte_range.split("=")[1].rstrip("-")) :], 206
+        if self.cut_next_body_at is not None:
+            body, self.cut_next_body_at = body[: self.cut_next_body_at], None
+        return FakeResponse(body, headers, status)
