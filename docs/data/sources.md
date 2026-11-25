@@ -82,7 +82,7 @@ a **5-digit CEP prefix**); the facility name column keeps the typo `no_fantasia_
 | `co_municipio_paciente` / `co_municipio_estabelecimento` | Residence / facility municipality | **6 digits** (DATASUS form); 1.6 % of residence codes empty | Join on 6 digits; add the IBGE 7-digit code from reference data |
 | `sg_uf_estabelecimento` | Facility UF | never empty | Downloader scope filter |
 | `nu_cep_paciente` | First 5 digits of the residence CEP | 7.5 % empty | Quasi-identifier, not needed → **dropped in silver** |
-| `co_vacina`, `sg_imunobiologico`, `co_dose_vacina`, `ds_tipo_dose` | Vaccine and dose | 65 vaccines, 39 dose codes (`1ª Dose`, `Única`, `Reforço`…) | Conformed through `seeds/vaccine_dose_map.csv` (F02-T03) |
+| `co_vacina`, `sg_imunobiologico`, `co_dose_vacina`, `ds_tipo_dose` | Vaccine and dose | 65 vaccines, 39 dose codes (`1ª Dose`, `Única`, `Reforço`…) | Conformed through `seeds/vaccines.csv`, `seeds/doses.csv` and `seeds/coverage_indicators.csv` (F02-T03) |
 | `no_estrategia` | Strategy (Rotina, Campanha, Especial…) | 79 % routine | Coverage indicators use routine doses (methodology, F06-T03) |
 
 ### 1.6 Registration lag — the data really arrives late
@@ -155,11 +155,59 @@ python -I scripts/discovery/profile_sample.py ~/vaxlake-data/discovery/jan_2025/
 
 ## 2. Reference data
 
-| Source | Use | Status |
-|---|---|---|
-| IBGE municipalities | Names, UF, region; 7-digit code (DATASUS uses 6) | To document in F02-T03 |
-| SINASC live births | Coverage denominator for children < 1 and 1 year | To document in F02-T03 |
-| PNI technical notes | Coverage targets per vaccine; dose that completes each schedule | To document in F02-T03 |
+> Verified on 2026-11-25 ([F02-T03](../tasks/F02-T03-reference-data-sources.md)).
+
+### 2.1 IBGE municipalities
+
+| Item | Value |
+|---|---|
+| Source | IBGE *API de Localidades* — <https://servicodados.ibge.gov.br/api/v1/localidades/municipios?view=nivelado> (JSON, no key) |
+| Content | 5 571 municipalities: 7-digit IBGE code, name, UF, region, plus micro/meso and immediate/intermediate regions |
+| Code rule | The DATASUS/SI-PNI 6-digit code is the IBGE code **without its last (check) digit**; the first 6 digits are unique across all 5 571 municipalities |
+| Check against SI-PNI (300 000 rows) | Every facility municipality code matches. Residence codes not found: `999999` (unknown residence, 31 rows) and one invalid code → treated as missing |
+| Vintage | Current list at download time; the vintage (download date) is stored with the table because municipalities are occasionally created |
+| Southeast | 1 668 municipalities (SP 645, MG 853, RJ 92, ES 78) |
+
+### 2.2 SINASC — live births (coverage denominator)
+
+| Item | Value |
+|---|---|
+| Dataset | *Sistema de Informação sobre Nascidos Vivos – Sinasc* — <https://dadosabertos.saude.gov.br/dataset/sistema-de-informacao-sobre-nascidos-vivos-sinasc> |
+| Licence | Creative Commons Attribution (portal metadata) |
+| Files | One ZIP per year in CSV/JSON/XML: `https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SINASC/csv/SINASC_{yyyy}_csv.zip` (from 2016; older years use `DNBR{yyyy}`). 2024 is final; **2025 is preliminary and 2026 a "2nd preview"** |
+| Format (2024, measured) | 92 MB ZIP → 562 MB CSV, `;`, valid UTF-8, 62 columns, **one row per birth** |
+| Columns we use | `CODMUNRES` (residence municipality, 6 digits), `DTNASC` (birth date, `DDMMYYYY`) |
+| Minimisation | Each row describes a birth and the mother (age, schooling, race/colour, pregnancy history). We only need **counts of births per residence municipality and year**, so the ingestion aggregates while reading and never stores the microdata (F02-T06) |
+| Rule (NT 90/2025) | SINASC is the denominator for children under 1 and 1 year old; while the current year is not consolidated, the **previous year** is used |
+
+### 2.3 Vaccine, dose and coverage-indicator reference tables
+
+Curated seeds in [`seeds/`](../../seeds/README.md): `vaccines.csv` (80 codes), `doses.csv`
+(49 codes) and `coverage_indicators.csv` (15 childhood indicators with vaccines, doses required,
+target age, minimum interval and target). Each value cites its source in `seeds/README.md`.
+
+### 2.4 Coverage methodology (official)
+
+**Nota Técnica nº 90/2025-DPNI/SVSA/MS** (17/12/2025, revokes NT 117/2024) defines the method in
+force since 2024:
+
+- Coverage = people who completed the schedule ÷ eligible population × 100.
+- The numerator counts **individuals (CNS/CPF), not doses**, in two stages: (1) people with enough
+  doses for the schedule, respecting minimum/maximum age and minimum interval, *whatever the
+  "dose type" field says*; (2) people not included in stage 1 but whose last dose is recorded with
+  the completing "dose type". The share of stage-2 people is itself a **data-quality indicator**.
+- Each individual is counted once; the only numerator source is the RNDS.
+- The old method (1994–2023) counted the last dose by "dose type", which explains historical
+  coverages above 100 %.
+
+Consequences for this project: silver keeps `patient_key` (the RNDS pseudonymous patient hash)
+so gold can follow patients across months and reproduce both stages; with age only in whole
+years, age limits in months are approximated (F06-T03).
+
+Calendar rules (doses, ages, intervals) come from the **Instrução Normativa do Calendário
+Nacional de Vacinação 2025**; targets (90 % BCG and rotavirus, 95 % the others) from the CNM
+technical study (2026), a secondary source citing the national calendar — see the caveats in
+[`seeds/README.md`](../../seeds/README.md).
 
 ## 3. Data-quality caveats found so far
 
