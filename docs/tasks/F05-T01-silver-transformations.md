@@ -17,7 +17,7 @@ Pure, tested functions that turn raw strings into typed, standardised, minimised
 1. `rename_to_english`, `cast_types` (dates with explicit formats), `trim_and_nullify`
 2. `standardise_municipality` (6/7 digits), `standardise_vaccine_and_dose` (conform with `seeds/vaccines.csv` and `seeds/doses.csv`)
 3. `add_registration_lag` (days between vaccination and registration)
-4. `minimise` (birth date → age in months, drop fields marked *drop* in the dictionary)
+4. `minimise` (drop the 21 columns marked ❌ in the data dictionary; privacy rules P1–P2)
 5. Compose with `DataFrame.transform`; unit tests per function
 
 ## Acceptance criteria

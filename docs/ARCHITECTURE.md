@@ -458,10 +458,10 @@ Quality is checked at every layer ("defence in depth"):
 - Tables are registered in the Spark catalog as `bronze.*`, `silver.*`, `gold.*`, `ops.*` with table and column **comments generated from contracts**.
 - **OpenLineage** emits a lineage event for each Spark job (inputs, outputs, column lineage); `docs/lineage.md` is generated from those events. Marquez can display them (optional).
 - **Delta history** is the audit trail; `docs/data/data_card.md` documents provenance, intended use, limitations and ownership.
-- **LGPD** (Lei 13.709/2018): health data is *sensitive personal data* (art. 5, II and art. 11). The source is anonymised, but combinations (birth date + sex + small municipality) can raise re-identification risk, so:
-  - **minimisation** — silver drops fields the indicators do not need (e.g. exact birth date → age in months; patient hash not propagated to gold);
-  - **small-cell suppression** — gold/dashboard counts below a threshold (default 5) are suppressed;
-  - no joins with other data aimed at identifying people.
+- **LGPD** (Lei 13.709/2018): health data is *sensitive personal data* (art. 5, II and art. 11). The source is called anonymised, but it has a stable pseudonymous patient code and quasi-identifiers: in the samples, *municipality + date + age + sex* makes 69 % of records unique. The [privacy assessment](data/privacy_assessment.md) defines rules P1–P11, mainly:
+  - **minimisation** — silver keeps 35 of 56 columns; all sensitive columns and the CEP prefix are dropped; `patient_key` stays in silver (the official coverage method needs it) and never reaches gold;
+  - **small-cell suppression** — published counts below *k* = 5 (`privacy.suppression_threshold`), and coverages whose numerator or complement is below *k*, are suppressed;
+  - no record-level data outside the lakehouse, and no joins with other data aimed at identifying people.
 
 ### 6.9 Git workflow
 

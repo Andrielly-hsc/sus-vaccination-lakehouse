@@ -87,3 +87,10 @@ def test_deep_merge_keeps_unrelated_nested_keys() -> None:
 def test_all_27_federative_units_are_known() -> None:
     assert len(UF_CODES) == 27
     assert {"SP", "MG", "RJ", "ES", "DF"} <= UF_CODES
+
+
+def test_suppression_threshold_defaults_to_five_and_rejects_unsafe_values() -> None:
+    assert Settings().privacy.suppression_threshold == 5
+
+    with pytest.raises(ValidationError, match="suppression_threshold"):
+        Settings(privacy={"suppression_threshold": 1})
