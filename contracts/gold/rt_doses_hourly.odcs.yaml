@@ -1,0 +1,97 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-gold-rt-doses-hourly
+name: Gold real-time hourly doses
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Near-real-time doses per municipality, vaccine and hour from the simulated live feed.
+  usage: Live panel of the dashboard.
+  limitations: 'Provisional: only about a quarter of a day''s doses reach the RNDS the same day; time
+    of day is synthesised by the replayer.'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/gold/
+  format: delta
+  environment: dev
+schema:
+- name: rt_doses_hourly
+  physicalName: gold.rt_doses_hourly
+  physicalType: table
+  description: Windowed streaming aggregate (1-hour tumbling windows, watermark).
+  dataGranularityDescription: 1-hour window x municipality x vaccine.
+  properties:
+  - name: window_start
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: aggregate
+    description: Window start (event time).
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: municipality_code_6
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Facility municipality.
+    primaryKey: true
+    primaryKeyPosition: 2
+  - name: vaccine_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Vaccine.
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: window_end
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: aggregate
+    description: Window end.
+  - name: doses
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Doses received so far for the window.
+  - name: is_provisional
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: aggregate
+    description: Always true for the real-time view.
+  - name: _updated_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: Micro-batch that wrote the row.
+slaProperties:
+- property: latency
+  value: 1
+  unit: m
+  description: Updated every micro-batch (about 10 s trigger).
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- gold
+- streaming
+customProperties:
+- property: layer
+  value: gold
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

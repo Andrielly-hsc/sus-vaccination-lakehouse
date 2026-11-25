@@ -1,0 +1,103 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-source-ibge-municipalities
+name: IBGE municipalities (Localidades API)
+version: 1.0.0
+status: active
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Official list of Brazilian municipalities with UF and region, used to conform municipality
+    codes.
+  usage: Input of bronze.ref_ibge_municipalities.
+  limitations: Current list only (no history); municipalities are occasionally created, so each download
+    is stored with its date.
+servers:
+- server: ibge-api
+  type: api
+  environment: prod
+  location: https://servicodados.ibge.gov.br/api/v1/localidades/municipios?view=nivelado
+schema:
+- name: ibge_municipalities
+  physicalName: localidades/municipios?view=nivelado
+  physicalType: api-response
+  description: JSON array, one element per municipality (flat view).
+  dataGranularityDescription: One element per municipality (5 571 on 2026-11-25).
+  properties:
+  - name: municipio-id
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: org
+    description: 7-digit IBGE code; the first 6 digits are the DATASUS code.
+  - name: municipio-nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Municipality name.
+  - name: UF-id
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: org
+    description: 2-digit UF code.
+  - name: UF-sigla
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF acronym.
+  - name: UF-nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF name.
+  - name: regiao-id
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: org
+    description: Region code (1 N, 2 NE, 3 SE, 4 S, 5 CO).
+  - name: regiao-sigla
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region acronym.
+  - name: regiao-nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region name.
+  quality:
+  - name: about_5570_municipalities
+    type: library
+    metric: rowCount
+    mustBeBetween:
+    - 5560
+    - 5600
+    dimension: completeness
+    severity: error
+    description: Brazil has about 5 570 municipalities.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- source
+- ibge
+- reference
+customProperties:
+- property: layer
+  value: source
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

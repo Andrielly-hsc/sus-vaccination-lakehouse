@@ -1,0 +1,148 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-silver-dim-establishment
+name: Silver establishment dimension (SCD Type 2)
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: History of health-facility attributes (the 'device registry' of this IoT-style pipeline).
+  usage: Source of gold.dim_establishment; lets facts be reported with the attributes valid at the time.
+  limitations: Derived from attributes carried in the dose records, not from the full CNES registry.
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/silver/
+  format: delta
+  environment: dev
+schema:
+- name: dim_establishment
+  physicalName: silver.dim_establishment
+  physicalType: table
+  description: One row per version of a facility.
+  dataGranularityDescription: establishment_code x validity period.
+  properties:
+  - name: establishment_sk
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: technical
+    description: xxhash64(establishment_code, valid_from); deterministic.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: establishment_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: CNES.
+  - name: establishment_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Trade name.
+  - name: establishment_legal_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Legal name.
+  - name: establishment_type_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility type.
+  - name: establishment_nature_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Legal nature.
+  - name: facility_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: 6-digit municipality.
+  - name: facility_uf
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF.
+  - name: attribute_hash
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Hash of the tracked attributes; a change opens a new version.
+  - name: valid_from
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: First vaccination date with these attributes.
+  - name: valid_to
+    logicalType: date
+    physicalType: date
+    required: false
+    classification: technical
+    description: Day before the next version; null for the current one.
+  - name: is_current
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: technical
+    description: Current version.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+  quality:
+  - name: unique_establishment_sk
+    type: library
+    metric: duplicateValues
+    arguments:
+      properties:
+      - establishment_sk
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: (establishment_sk) identifies one row.
+  - name: one_current_version
+    type: sql
+    query: SELECT COUNT(*) FROM (SELECT establishment_code FROM ${object} WHERE is_current GROUP BY establishment_code
+      HAVING COUNT(*) > 1)
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: Exactly one current version per establishment.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- silver
+- scd2
+customProperties:
+- property: layer
+  value: silver
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

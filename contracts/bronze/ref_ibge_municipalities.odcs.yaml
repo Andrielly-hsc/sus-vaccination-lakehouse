@@ -1,0 +1,122 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-bronze-ref-ibge-municipalities
+name: Bronze IBGE municipalities
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Raw copy of each download of the IBGE municipality list.
+  usage: Read by silver/gold to build dim_municipality.
+  limitations: API field names are converted to snake_case (hyphens are not valid column names); values
+    are unchanged.
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/bronze/
+  format: delta
+  environment: dev
+schema:
+- name: ref_ibge_municipalities
+  physicalName: bronze.ref_ibge_municipalities
+  physicalType: table
+  description: One row per municipality per download.
+  dataGranularityDescription: Municipality x download (vintage).
+  properties:
+  - name: municipio_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: 7-digit IBGE code.
+    transformSourceObjects:
+    - source.ibge_municipalities.municipio-id
+  - name: municipio_nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Municipality name.
+  - name: uf_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF code.
+  - name: uf_sigla
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF acronym.
+  - name: uf_nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF name.
+  - name: regiao_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region code.
+  - name: regiao_sigla
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region acronym.
+  - name: regiao_nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region name.
+  - name: _vintage
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: Download date; partition column.
+    partitioned: true
+    partitionKeyPosition: 1
+  - name: _source_url
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: API URL used.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- bronze
+- reference
+customProperties:
+- property: layer
+  value: bronze
+- property: sourceContract
+  value: vaxlake-source-ibge-municipalities
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

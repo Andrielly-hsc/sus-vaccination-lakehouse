@@ -1,0 +1,156 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-gold-fct-doses-daily
+name: Gold daily doses fact
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Additive daily counts of doses, the base for volumes, timeliness and dashboards.
+  usage: Aggregations by any dimension; never contains people.
+  limitations: 'Counts doses, not people: coverage uses the individual-based method in ind_coverage_yearly
+    instead.'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/gold/
+  format: delta
+  environment: dev
+schema:
+- name: fct_doses_daily
+  physicalName: gold.fct_doses_daily
+  physicalType: table
+  description: Doses per day and dimension combination.
+  dataGranularityDescription: vaccination_date x residence municipality x facility municipality x establishment
+    version x vaccine x dose x strategy.
+  properties:
+  - name: vaccination_date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: operational
+    description: Day of vaccination.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: residence_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Residence; 'UNKNOWN' when missing.
+    primaryKey: true
+    primaryKeyPosition: 2
+  - name: facility_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Facility municipality.
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: establishment_sk
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: technical
+    description: Facility version.
+    primaryKey: true
+    primaryKeyPosition: 4
+  - name: vaccine_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Vaccine.
+    primaryKey: true
+    primaryKeyPosition: 5
+  - name: dose_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Dose.
+    primaryKey: true
+    primaryKeyPosition: 6
+  - name: strategy_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Strategy; 'UNKNOWN' when missing.
+    primaryKey: true
+    primaryKeyPosition: 7
+  - name: doses
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Number of doses.
+  - name: doses_registered_within_7d
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Doses with registration_lag_days <= 7.
+  - name: doses_registered_within_30d
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Doses with registration_lag_days <= 30.
+  - name: sum_registration_lag_days
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Sum of lags (for averages).
+  - name: year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: Year of vaccination_date; partition column.
+    partitioned: true
+    partitionKeyPosition: 1
+  - name: _updated_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: Build time.
+  quality:
+  - name: non_negative
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE doses < 0 OR doses_registered_within_7d > doses
+    mustBe: 0
+    dimension: consistency
+    severity: error
+    description: Counts are coherent.
+  - name: reconciles_with_silver
+    type: sql
+    query: SELECT ABS((SELECT SUM(doses) FROM ${object}) - (SELECT COUNT(*) FROM silver.vaccination_doses
+      WHERE NOT is_deleted))
+    mustBe: 0
+    dimension: consistency
+    severity: error
+    description: Total doses equal valid, non-deleted silver rows.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- gold
+- star-schema
+- fact
+customProperties:
+- property: layer
+  value: gold
+contractCreatedTs: '2026-11-25T00:00:00-03:00'
