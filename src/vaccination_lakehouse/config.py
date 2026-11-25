@@ -93,6 +93,41 @@ class PathsConfig(BaseModel):
     def metastore_dir(self) -> Path:
         return self.data_dir / "metastore"
 
+    @property
+    def tmp_dir(self) -> Path:
+        """Scratch space for partial downloads (never read by the pipeline)."""
+        return self.data_dir / "tmp"
+
+    def table_path(self, physical_name: str) -> Path:
+        """Delta table location for ``layer.table``, e.g. ``bronze.sipni_doses_raw``."""
+        layer, _, table = physical_name.partition(".")
+        if not table:
+            raise ValueError(f"expected 'layer.table', got {physical_name!r}")
+        return self.lakehouse_dir / layer / table
+
+    def checkpoint_path(self, query_name: str) -> Path:
+        return self.checkpoints_dir / query_name
+
+
+class IngestionConfig(BaseModel):
+    """Download and landing settings (F03)."""
+
+    sipni_base_url: str = "https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/PNI/csv"
+    sinasc_base_url: str = "https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SINASC/csv"
+    ibge_municipalities_url: str = (
+        "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?view=nivelado"
+    )
+    timeout_seconds: int = Field(default=120, ge=5)
+    max_retries: int = Field(default=5, ge=0)
+    rows_per_file: int = Field(
+        default=500_000,
+        ge=1,
+        description="Rows per landing CSV part; gzip is not splittable, so smaller parts let "
+        "Spark read a month in parallel.",
+    )
+    keep_zip: bool = False
+    max_files_per_trigger: int = Field(default=8, ge=1)
+
 
 class SparkConfig(BaseModel):
     """SparkSession settings (see spark.py)."""
@@ -185,6 +220,7 @@ class Settings(BaseSettings):
     scope: ScopeConfig
     paths: PathsConfig = PathsConfig()
     spark: SparkConfig = SparkConfig()
+    ingestion: IngestionConfig = IngestionConfig()
     privacy: PrivacyConfig = PrivacyConfig()
     logging: LoggingConfig = LoggingConfig()
 
