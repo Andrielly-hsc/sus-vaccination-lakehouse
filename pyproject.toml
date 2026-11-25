@@ -68,7 +68,8 @@ select = [
     "N",       # pep8-naming
 ]
 # B008: typer declares CLI options as default arguments (typer.Option(...)) by design.
-ignore = ["B008"]
+# N812: the PySpark community convention is `functions as F` and `types as T`.
+ignore = ["B008", "N812"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["vaccination_lakehouse"]
