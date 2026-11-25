@@ -1,0 +1,47 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# --- Virtual environments ---
+.venv/
+venv/
+
+# --- Testing / tooling caches ---
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Environment & secrets (never commit) ---
+.env
+.env.*
+!.env.example
+
+# --- Data, Delta tables, checkpoints (reproducible from code) ---
+# Leading slash = only the top-level folder; a bare "data/" would also hide docs/data/.
+/data/
+
+# --- Spark local artefacts ---
+spark-warehouse/
+metastore_db/
+derby.log
+spark-events/
+*.crc
+
+# --- Great Expectations generated output ---
+gx/uncommitted/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
