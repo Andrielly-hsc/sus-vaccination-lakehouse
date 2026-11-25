@@ -1,0 +1,124 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-silver-quarantine-doses
+name: Silver quarantined doses
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Rows that failed row-level validation, kept with the reasons instead of being dropped silently.
+  usage: Data-quality analysis, reprocessing after a rule or source fix.
+  limitations: 'Holds the raw record, including pseudonymous fields: same restrictions as bronze.'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/silver/
+  format: delta
+  environment: dev
+schema:
+- name: quarantine_doses
+  physicalName: silver.quarantine_doses
+  physicalType: table
+  description: Invalid rows with every failed rule.
+  dataGranularityDescription: One row per invalid bronze row per batch.
+  properties:
+  - name: quarantine_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: sha2(_file_hash || raw record).
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: dose_id
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: id
+    description: co_documento when present.
+  - name: reject_reasons
+    logicalType: array
+    physicalType: array<string>
+    required: true
+    classification: technical
+    description: Names of the failed rules (contract quality rule names).
+    items:
+      logicalType: string
+  - name: raw_record
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: pseudonym
+    description: The bronze row as JSON.
+  - name: _source_file
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Landing file.
+  - name: _file_hash
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: File hash.
+  - name: _ingest_date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: Partition column.
+    partitioned: true
+    partitionKeyPosition: 1
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+  quality:
+  - name: unique_quarantine_id
+    type: library
+    metric: duplicateValues
+    arguments:
+      properties:
+      - quarantine_id
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: (quarantine_id) identifies one row.
+  - name: required_reject_reasons
+    type: library
+    metric: nullValues
+    arguments:
+      properties:
+      - reject_reasons
+    mustBe: 0
+    dimension: completeness
+    severity: error
+    description: reject_reasons never null.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- silver
+- data-quality
+customProperties:
+- property: layer
+  value: silver
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

@@ -1,0 +1,622 @@
+# Generated once from the data dictionary (docs/data/data_dictionary.md); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-bronze-sipni-doses-raw
+name: Bronze SI-PNI doses (raw)
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Faithful, append-only copy of every landing file of the SI-PNI source, as text, with provenance
+    columns, so that silver can always be rebuilt and any number traced to its file.
+  usage: Read only by the silver jobs. Not for analysis.
+  limitations: 'All columns are strings; no deduplication, no validation beyond the file contract. Contains
+    pseudonymous and sensitive columns: never exposed outside the lakehouse.'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/bronze/sipni_doses_raw
+  format: delta
+  environment: dev
+schema:
+- name: sipni_doses_raw
+  physicalName: bronze.sipni_doses_raw
+  physicalType: table
+  description: Source columns unchanged (names and text values) plus ingestion metadata (columns starting
+    with '_').
+  dataGranularityDescription: One row per source row per landing file version; the same dose appears again
+    when a month is re-published.
+  properties:
+  - name: co_documento
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: id
+    description: Identifier (UUID) of the FHIR document in the RNDS; one per dose record.
+    criticalDataElement: true
+    transformSourceObjects:
+    - source.sipni_doses.co_documento
+    transformLogic: copied as text, unchanged
+  - name: co_paciente
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: pseudonym
+    description: Pseudonymous patient identifier assigned by the RNDS (hash).
+    transformSourceObjects:
+    - source.sipni_doses.co_paciente
+    transformLogic: copied as text, unchanged
+  - name: tp_sexo_paciente
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: quasi
+    description: 'Biological sex: F, M or I (indeterminate).'
+    transformSourceObjects:
+    - source.sipni_doses.tp_sexo_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_raca_cor_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Race/colour code (01 white, 02 black, 03 brown, 04 yellow, 05 indigenous, 99 not informed).
+    transformSourceObjects:
+    - source.sipni_doses.co_raca_cor_paciente
+    transformLogic: copied as text, unchanged
+  - name: no_raca_cor_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Race/colour name.
+    transformSourceObjects:
+    - source.sipni_doses.no_raca_cor_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_municipio_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence municipality, 6-digit DATASUS code (IBGE code without check digit); 999999
+      = unknown.
+    transformSourceObjects:
+    - source.sipni_doses.co_municipio_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_pais_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence country code (10 = Brazil).
+    transformSourceObjects:
+    - source.sipni_doses.co_pais_paciente
+    transformLogic: copied as text, unchanged
+  - name: no_municipio_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence municipality name.
+    transformSourceObjects:
+    - source.sipni_doses.no_municipio_paciente
+    transformLogic: copied as text, unchanged
+  - name: no_pais_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence country name.
+    transformSourceObjects:
+    - source.sipni_doses.no_pais_paciente
+    transformLogic: copied as text, unchanged
+  - name: sg_uf_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence UF (state) acronym.
+    transformSourceObjects:
+    - source.sipni_doses.sg_uf_paciente
+    transformLogic: copied as text, unchanged
+  - name: nu_cep_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: First 5 digits of the residence postal code (CEP). The PDF dictionary wrongly calls it
+      'UF name'.
+    transformSourceObjects:
+    - source.sipni_doses.nu_cep_paciente
+    transformLogic: copied as text, unchanged
+  - name: ds_nacionalidade_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: 'Nationality: B Brazilian, E foreign, N naturalised.'
+    transformSourceObjects:
+    - source.sipni_doses.ds_nacionalidade_paciente
+    transformLogic: copied as text, unchanged
+  - name: no_etnia_indigena_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Indigenous ethnicity name.
+    transformSourceObjects:
+    - source.sipni_doses.no_etnia_indigena_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_etnia_indigena_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Indigenous ethnicity code.
+    transformSourceObjects:
+    - source.sipni_doses.co_etnia_indigena_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_cnes_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Health facility code in the national registry (CNES), 7 digits.
+    transformSourceObjects:
+    - source.sipni_doses.co_cnes_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: no_razao_social_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility legal name in CNES.
+    transformSourceObjects:
+    - source.sipni_doses.no_razao_social_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: no_fantasia_estalecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility trade name (column name keeps the source typo).
+    transformSourceObjects:
+    - source.sipni_doses.no_fantasia_estalecimento
+    transformLogic: copied as text, unchanged
+  - name: co_municipio_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Facility municipality, 6-digit DATASUS code.
+    transformSourceObjects:
+    - source.sipni_doses.co_municipio_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: no_municipio_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility municipality name.
+    transformSourceObjects:
+    - source.sipni_doses.no_municipio_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: sg_uf_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Facility UF acronym.
+    transformSourceObjects:
+    - source.sipni_doses.sg_uf_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: co_troca_documento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: id
+    description: Document that this record replaces or alters (update semantics).
+    transformSourceObjects:
+    - source.sipni_doses.co_troca_documento
+    transformLogic: copied as text, unchanged
+  - name: co_vacina
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Vaccine (immunobiological) code.
+    transformSourceObjects:
+    - source.sipni_doses.co_vacina
+    transformLogic: copied as text, unchanged
+  - name: sg_imunobiologico
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: 'Vaccine acronym (PDF name: sg_vacina).'
+    transformSourceObjects:
+    - source.sipni_doses.sg_imunobiologico
+    transformLogic: copied as text, unchanged
+  - name: dt_vacina
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Vaccination date, YYYY-MM-DD (event time).
+    transformSourceObjects:
+    - source.sipni_doses.dt_vacina
+    transformLogic: copied as text, unchanged
+  - name: co_dose_vacina
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Dose code.
+    transformSourceObjects:
+    - source.sipni_doses.co_dose_vacina
+    transformLogic: copied as text, unchanged
+  - name: ds_tipo_dose
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: 'Dose description, e.g. ''1ª Dose'', ''Única'', ''Reforço'' (PDF name: ds_dose_vacina).'
+    transformSourceObjects:
+    - source.sipni_doses.ds_tipo_dose
+    transformLogic: copied as text, unchanged
+  - name: co_local_aplicacao
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Body site code.
+    transformSourceObjects:
+    - source.sipni_doses.co_local_aplicacao
+    transformLogic: copied as text, unchanged
+  - name: ds_local_aplicacao
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Body site description.
+    transformSourceObjects:
+    - source.sipni_doses.ds_local_aplicacao
+    transformLogic: copied as text, unchanged
+  - name: co_via_administracao
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Administration route code.
+    transformSourceObjects:
+    - source.sipni_doses.co_via_administracao
+    transformLogic: copied as text, unchanged
+  - name: ds_via_administracao
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Administration route description.
+    transformSourceObjects:
+    - source.sipni_doses.ds_via_administracao
+    transformLogic: copied as text, unchanged
+  - name: co_lote_vacina
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccine lot (free text).
+    transformSourceObjects:
+    - source.sipni_doses.co_lote_vacina
+    transformLogic: copied as text, unchanged
+  - name: ds_vacina_fabricante
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Manufacturer name (free text).
+    transformSourceObjects:
+    - source.sipni_doses.ds_vacina_fabricante
+    transformLogic: copied as text, unchanged
+  - name: dt_entrada_rnds
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Date the record entered the RNDS, YYYY-MM-DD (processing time; a date, not a timestamp).
+    transformSourceObjects:
+    - source.sipni_doses.dt_entrada_rnds
+    transformLogic: copied as text, unchanged
+  - name: co_sistema_origem
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Code of the source system installation that sent the record.
+    transformSourceObjects:
+    - source.sipni_doses.co_sistema_origem
+    transformLogic: copied as text, unchanged
+  - name: ds_sistema_origem
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Source system name (free text).
+    transformSourceObjects:
+    - source.sipni_doses.ds_sistema_origem
+    transformLogic: copied as text, unchanged
+  - name: st_documento
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Document status (only 'final' observed).
+    transformSourceObjects:
+    - source.sipni_doses.st_documento
+    transformLogic: copied as text, unchanged
+  - name: co_estrategia_vacinacao
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccination strategy code (1 = routine).
+    transformSourceObjects:
+    - source.sipni_doses.co_estrategia_vacinacao
+    transformLogic: copied as text, unchanged
+  - name: no_estrategia
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: 'Vaccination strategy name (PDF name: ds_estrategia_vacinacao).'
+    transformSourceObjects:
+    - source.sipni_doses.no_estrategia
+    transformLogic: copied as text, unchanged
+  - name: co_origem_registro
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: 'Record origin: 01 transcription from the vaccination card, 02 vaccinated abroad.'
+    transformSourceObjects:
+    - source.sipni_doses.co_origem_registro
+    transformLogic: copied as text, unchanged
+  - name: ds_origem_registro
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Record origin description.
+    transformSourceObjects:
+    - source.sipni_doses.ds_origem_registro
+    transformLogic: copied as text, unchanged
+  - name: co_vacina_grupo_atendimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Priority group code.
+    transformSourceObjects:
+    - source.sipni_doses.co_vacina_grupo_atendimento
+    transformLogic: copied as text, unchanged
+  - name: no_grupo_atendimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Priority group name.
+    transformSourceObjects:
+    - source.sipni_doses.no_grupo_atendimento
+    transformLogic: copied as text, unchanged
+  - name: co_categoria
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Priority category code (includes comorbidities and other sensitive groups).
+    transformSourceObjects:
+    - source.sipni_doses.co_categoria
+    transformLogic: copied as text, unchanged
+  - name: ds_categoria
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Priority category name.
+    transformSourceObjects:
+    - source.sipni_doses.ds_categoria
+    transformLogic: copied as text, unchanged
+  - name: co_vacina_fabricante
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Manufacturer code.
+    transformSourceObjects:
+    - source.sipni_doses.co_vacina_fabricante
+    transformLogic: copied as text, unchanged
+  - name: ds_nome
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: 'Vaccine full name (PDF name: ds_vacina).'
+    transformSourceObjects:
+    - source.sipni_doses.ds_nome
+    transformLogic: copied as text, unchanged
+  - name: ds_condicao_maternal
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Maternal condition (pregnant, puerperal, none).
+    transformSourceObjects:
+    - source.sipni_doses.ds_condicao_maternal
+    transformLogic: copied as text, unchanged
+  - name: co_tipo_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility type code.
+    transformSourceObjects:
+    - source.sipni_doses.co_tipo_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: ds_tipo_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility type name.
+    transformSourceObjects:
+    - source.sipni_doses.ds_tipo_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: co_natureza_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility legal nature code.
+    transformSourceObjects:
+    - source.sipni_doses.co_natureza_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: ds_natureza_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility legal nature name.
+    transformSourceObjects:
+    - source.sipni_doses.ds_natureza_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: nu_idade_paciente
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: quasi
+    description: Age in whole years at vaccination (0 = under one year).
+    transformSourceObjects:
+    - source.sipni_doses.nu_idade_paciente
+    transformLogic: copied as text, unchanged
+  - name: co_condicao_maternal
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: sensitive
+    description: Maternal condition code.
+    transformSourceObjects:
+    - source.sipni_doses.co_condicao_maternal
+    transformLogic: copied as text, unchanged
+  - name: no_uf_paciente
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence UF name.
+    transformSourceObjects:
+    - source.sipni_doses.no_uf_paciente
+    transformLogic: copied as text, unchanged
+  - name: no_uf_estabelecimento
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility UF name.
+    transformSourceObjects:
+    - source.sipni_doses.no_uf_estabelecimento
+    transformLogic: copied as text, unchanged
+  - name: dt_deletado_rnds
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: 'Deletion date in the RNDS (PDF name: dt_deleted); empty in all samples.'
+    transformSourceObjects:
+    - source.sipni_doses.dt_deletado_rnds
+    transformLogic: copied as text, unchanged
+  - name: _corrupt_record
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: technical
+    description: Raw line when Spark could not parse it (PERMISSIVE mode); null otherwise.
+  - name: _source_file
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Landing file the row came from (Spark _metadata.file_path).
+  - name: _file_hash
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: SHA-256 of the landing file; identifies the published version of a month.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Identifier of the ingestion run (run_id).
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written to bronze (UTC).
+  - name: _ingest_date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: Ingestion date; partition column.
+    partitioned: true
+    partitionKeyPosition: 1
+  quality:
+  - name: reconciles_with_manifest
+    type: sql
+    dimension: completeness
+    severity: error
+    description: Rows per file equal the row count recorded in the landing manifest.
+    query: SELECT COUNT(*) FROM ${object} b JOIN ops.landing_manifest m ON b._file_hash = m.sha256 GROUP
+      BY b._file_hash, m.rows HAVING COUNT(*) <> m.rows
+    mustBe: 0
+  - name: corrupt_rows_rare
+    type: library
+    metric: nullValues
+    arguments:
+      properties:
+      - _corrupt_record
+    description: Share of unparseable rows stays below 0.1 % (they are kept, not dropped).
+    mustBeGreaterOrEqualTo: 99.9
+    unit: percent
+    dimension: conformity
+    severity: warning
+slaProperties:
+- property: frequency
+  value: 1
+  unit: month
+- property: retention
+  value: 3
+  unit: y
+  description: Bronze keeps 3 years of file versions; older ones can be re-downloaded.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- bronze
+- si-pni
+customProperties:
+- property: layer
+  value: bronze
+- property: sourceContract
+  value: vaxlake-source-sipni-doses
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

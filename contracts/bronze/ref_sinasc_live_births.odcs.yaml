@@ -1,0 +1,107 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-bronze-ref-sinasc-live-births
+name: Bronze SINASC live births (aggregated)
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Live-birth counts per residence municipality and year, per published file version.
+  usage: Denominator of the coverage indicators (gold).
+  limitations: 'Deliberate exception to ''bronze = raw copy'': the microdata is aggregated while reading
+    because it describes individual births and mothers and only counts are needed (privacy assessment,
+    F02-T06).'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/bronze/
+  format: delta
+  environment: dev
+schema:
+- name: ref_sinasc_live_births
+  physicalName: bronze.ref_sinasc_live_births
+  physicalType: table
+  description: Counts of live births by residence municipality and birth year.
+  dataGranularityDescription: Year x residence municipality x file version.
+  properties:
+  - name: birth_year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Year of DTNASC.
+    transformSourceObjects:
+    - source.sinasc_live_births.DTNASC
+  - name: residence_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: CODMUNRES, 6 digits.
+    transformSourceObjects:
+    - source.sinasc_live_births.CODMUNRES
+  - name: live_births
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Number of live births.
+    transformLogic: COUNT(*) GROUP BY year(DTNASC), CODMUNRES
+  - name: data_status
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: final, preliminary or preview, from the portal resource name.
+    enum:
+    - value: final
+    - value: preliminary
+    - value: preview
+  - name: _file_hash
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: SHA-256 of the source ZIP.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+  quality:
+  - name: positive_counts
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE live_births <= 0
+    mustBe: 0
+    dimension: conformity
+    severity: error
+    description: Counts are positive.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- bronze
+- reference
+- sinasc
+customProperties:
+- property: layer
+  value: bronze
+- property: sourceContract
+  value: vaxlake-source-sinasc-live-births
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

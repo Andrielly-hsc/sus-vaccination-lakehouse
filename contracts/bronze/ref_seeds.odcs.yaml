@@ -1,0 +1,207 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-bronze-ref-seeds
+name: Bronze seeds (curated reference tables)
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Copies of the versioned CSV files in seeds/ so that every indicator run records which targets
+    and code lists it used.
+  usage: Read by silver (code conformance) and gold (indicator rules).
+  limitations: Curated by hand or by scripts/discovery/build_code_seeds.py; provenance in seeds/README.md.
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/bronze/
+  format: delta
+  environment: dev
+schema:
+- name: ref_coverage_indicators
+  physicalName: bronze.ref_coverage_indicators
+  physicalType: table
+  description: Copy of seeds/coverage_indicators.csv (all values as text).
+  dataGranularityDescription: One row per seed row per git commit.
+  properties:
+  - name: indicator_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column indicator_id of the seed file.
+  - name: indicator_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column indicator_name of the seed file.
+  - name: vaccine_codes
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column vaccine_codes of the seed file.
+  - name: doses_required
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column doses_required of the seed file.
+  - name: completing_dose_codes
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column completing_dose_codes of the seed file.
+  - name: target_age_years
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column target_age_years of the seed file.
+  - name: min_interval_days
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column min_interval_days of the seed file.
+  - name: denominator
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column denominator of the seed file.
+  - name: target_pct
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column target_pct of the seed file.
+  - name: computable
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column computable of the seed file.
+  - name: notes
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column notes of the seed file.
+  - name: _git_commit
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Commit of the seed file loaded.
+  - &id001
+    name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - &id002
+    name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+- name: ref_vaccines
+  physicalName: bronze.ref_vaccines
+  physicalType: table
+  description: Copy of seeds/vaccines.csv (all values as text).
+  dataGranularityDescription: One row per seed row per git commit.
+  properties:
+  - name: vaccine_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column vaccine_code of the seed file.
+  - name: vaccine_acronym
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column vaccine_acronym of the seed file.
+  - name: vaccine_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column vaccine_name of the seed file.
+  - name: product_type
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column product_type of the seed file.
+  - name: _git_commit
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Commit of the seed file loaded.
+  - *id001
+  - *id002
+- name: ref_doses
+  physicalName: bronze.ref_doses
+  physicalType: table
+  description: Copy of seeds/doses.csv (all values as text).
+  dataGranularityDescription: One row per seed row per git commit.
+  properties:
+  - name: dose_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column dose_code of the seed file.
+  - name: dose_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column dose_name of the seed file.
+  - name: dose_kind
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column dose_kind of the seed file.
+  - name: dose_number
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Column dose_number of the seed file.
+  - name: _git_commit
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Commit of the seed file loaded.
+  - *id001
+  - *id002
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- bronze
+- reference
+- seeds
+customProperties:
+- property: layer
+  value: bronze
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

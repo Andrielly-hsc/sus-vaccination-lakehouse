@@ -1,0 +1,67 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-source-sinasc-live-births
+name: SINASC live births (OpenDataSUS yearly CSV)
+version: 1.0.0
+status: active
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: 'Live births by municipality of residence: the official denominator of coverage for children
+    under 1 and 1 year old.'
+  usage: Input of bronze.ref_sinasc_live_births. Only the two columns below are read; the other 60 (about
+    the mother and the birth) are ignored (minimisation).
+  limitations: Current year is preliminary and changes until consolidation; NT 90/2025-DPNI uses the previous
+    year meanwhile.
+servers:
+- server: opendatasus-s3
+  type: s3
+  environment: prod
+  format: csv
+  delimiter: ;
+  location: s3://ckan.saude.gov.br/SINASC/csv/SINASC_{yyyy}_csv.zip
+  endpointUrl: https://s3.sa-east-1.amazonaws.com
+schema:
+- name: sinasc_live_births
+  physicalName: SINASC_{yyyy}.csv
+  physicalType: file
+  description: One row per live birth; UTF-8, ';', 62 columns (2024).
+  dataGranularityDescription: One row per live birth.
+  properties:
+  - name: CODMUNRES
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: quasi
+    description: Residence municipality of the mother, 6-digit DATASUS code.
+  - name: DTNASC
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: quasi
+    description: Birth date, DDMMYYYY.
+    logicalTypeOptions:
+      format: ddMMyyyy
+slaProperties:
+- property: frequency
+  value: 1
+  unit: y
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- source
+- sinasc
+- reference
+customProperties:
+- property: layer
+  value: source
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

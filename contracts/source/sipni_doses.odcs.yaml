@@ -1,0 +1,447 @@
+# Generated once from the data dictionary (docs/data/data_dictionary.md); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-source-sipni-doses
+name: SI-PNI doses applied (OpenDataSUS monthly CSV)
+version: 1.0.0
+status: active
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Describe the monthly SI-PNI 'doses aplicadas' files published by the Ministry of Health, as
+    observed on 2026-11-25, so that ingestion fails loudly if the publisher changes the format.
+  usage: Input of bronze.sipni_doses_raw. Only the routine childhood vaccines and the facility UFs in
+    scope are used downstream.
+  limitations: 'Contract written by the consumer, not the publisher: it records observed behaviour (Latin-1,
+    '';'', 56 columns stable 2024-2026), not a promise. Past months are re-published. Licence not stated
+    (public data under Lei 12.527/2011).'
+  authoritativeDefinitions:
+  - type: businessDefinition
+    url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/blob/main/docs/data/sources.md
+  - type: businessDefinition
+    url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/blob/main/docs/data/data_dictionary.md
+  - type: publisherDictionary
+    url: https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/dbbni/Dicionario_tb_ria_rotina.pdf
+servers:
+- server: opendatasus-s3
+  type: s3
+  description: Monthly national ZIP (one CSV member) per vaccination month; {mmm} = jan fev mar abr mai
+    jun jul ago set out nov dez.
+  location: s3://ckan.saude.gov.br/PNI/csv/vacinacao_{mmm}_{yyyy}_csv.zip
+  endpointUrl: https://s3.sa-east-1.amazonaws.com
+  format: csv
+  delimiter: ;
+  environment: prod
+schema:
+- name: sipni_doses
+  physicalName: vacinacao_{mmm}_{yyyy}.csv
+  physicalType: file
+  businessName: Doses aplicadas pelo PNI
+  description: One row per vaccine dose applied and registered in the RNDS, anonymised. Encoding ISO-8859-1,
+    delimiter ';', CRLF, unquoted header.
+  dataGranularityDescription: One row per dose record (FHIR document); a later record may replace an earlier
+    one (co_troca_documento).
+  properties:
+  - name: co_documento
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: id
+    description: Identifier (UUID) of the FHIR document in the RNDS; one per dose record.
+    criticalDataElement: true
+  - name: co_paciente
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: pseudonym
+    description: Pseudonymous patient identifier assigned by the RNDS (hash).
+  - name: tp_sexo_paciente
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: quasi
+    description: 'Biological sex: F, M or I (indeterminate).'
+    enum:
+    - value: F
+      label: Female
+    - value: M
+      label: Male
+    - value: I
+      label: Indeterminate
+  - name: co_raca_cor_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Race/colour code (01 white, 02 black, 03 brown, 04 yellow, 05 indigenous, 99 not informed).
+  - name: no_raca_cor_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Race/colour name.
+  - name: co_municipio_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence municipality, 6-digit DATASUS code (IBGE code without check digit); 999999
+      = unknown.
+  - name: co_pais_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence country code (10 = Brazil).
+  - name: no_municipio_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence municipality name.
+  - name: no_pais_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence country name.
+  - name: sg_uf_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence UF (state) acronym.
+  - name: nu_cep_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: First 5 digits of the residence postal code (CEP). The PDF dictionary wrongly calls it
+      'UF name'.
+  - name: ds_nacionalidade_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: 'Nationality: B Brazilian, E foreign, N naturalised.'
+  - name: no_etnia_indigena_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Indigenous ethnicity name.
+  - name: co_etnia_indigena_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Indigenous ethnicity code.
+  - name: co_cnes_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: org
+    description: Health facility code in the national registry (CNES), 7 digits.
+  - name: no_razao_social_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Facility legal name in CNES.
+  - name: no_fantasia_estalecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Facility trade name (column name keeps the source typo).
+  - name: co_municipio_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: org
+    description: Facility municipality, 6-digit DATASUS code.
+  - name: no_municipio_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Facility municipality name.
+  - name: sg_uf_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: org
+    description: Facility UF acronym.
+  - name: co_troca_documento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: id
+    description: Document that this record replaces or alters (update semantics).
+  - name: co_vacina
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: Vaccine (immunobiological) code.
+  - name: sg_imunobiologico
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: 'Vaccine acronym (PDF name: sg_vacina).'
+  - name: dt_vacina
+    logicalType: date
+    physicalType: text
+    required: true
+    classification: operational
+    description: Vaccination date, YYYY-MM-DD (event time).
+    logicalTypeOptions:
+      format: yyyy-MM-dd
+    criticalDataElement: true
+  - name: co_dose_vacina
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: Dose code.
+  - name: ds_tipo_dose
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: 'Dose description, e.g. ''1ª Dose'', ''Única'', ''Reforço'' (PDF name: ds_dose_vacina).'
+  - name: co_local_aplicacao
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Body site code.
+  - name: ds_local_aplicacao
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Body site description.
+  - name: co_via_administracao
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Administration route code.
+  - name: ds_via_administracao
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Administration route description.
+  - name: co_lote_vacina
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Vaccine lot (free text).
+  - name: ds_vacina_fabricante
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Manufacturer name (free text).
+  - name: dt_entrada_rnds
+    logicalType: date
+    physicalType: text
+    required: true
+    classification: operational
+    description: Date the record entered the RNDS, YYYY-MM-DD (processing time; a date, not a timestamp).
+    logicalTypeOptions:
+      format: yyyy-MM-dd
+    criticalDataElement: true
+  - name: co_sistema_origem
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: Code of the source system installation that sent the record.
+  - name: ds_sistema_origem
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Source system name (free text).
+  - name: st_documento
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: Document status (only 'final' observed).
+  - name: co_estrategia_vacinacao
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Vaccination strategy code (1 = routine).
+  - name: no_estrategia
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: 'Vaccination strategy name (PDF name: ds_estrategia_vacinacao).'
+  - name: co_origem_registro
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: 'Record origin: 01 transcription from the vaccination card, 02 vaccinated abroad.'
+  - name: ds_origem_registro
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: operational
+    description: Record origin description.
+  - name: co_vacina_grupo_atendimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Priority group code.
+  - name: no_grupo_atendimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Priority group name.
+  - name: co_categoria
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Priority category code (includes comorbidities and other sensitive groups).
+  - name: ds_categoria
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Priority category name.
+  - name: co_vacina_fabricante
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Manufacturer code.
+  - name: ds_nome
+    logicalType: string
+    physicalType: text
+    required: true
+    classification: operational
+    description: 'Vaccine full name (PDF name: ds_vacina).'
+  - name: ds_condicao_maternal
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Maternal condition (pregnant, puerperal, none).
+  - name: co_tipo_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: CNES facility type code.
+  - name: ds_tipo_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: CNES facility type name.
+  - name: co_natureza_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: CNES facility legal nature code.
+  - name: ds_natureza_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: CNES facility legal nature name.
+  - name: nu_idade_paciente
+    logicalType: integer
+    physicalType: text
+    required: true
+    classification: quasi
+    description: Age in whole years at vaccination (0 = under one year).
+  - name: co_condicao_maternal
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: sensitive
+    description: Maternal condition code.
+  - name: no_uf_paciente
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: quasi
+    description: Residence UF name.
+  - name: no_uf_estabelecimento
+    logicalType: string
+    physicalType: text
+    required: false
+    classification: org
+    description: Facility UF name.
+  - name: dt_deletado_rnds
+    logicalType: timestamp
+    physicalType: text
+    required: false
+    classification: operational
+    description: 'Deletion date in the RNDS (PDF name: dt_deleted); empty in all samples.'
+  quality:
+  - name: monthly_volume
+    type: library
+    metric: rowCount
+    mustBeGreaterThan: 1000000
+    dimension: completeness
+    severity: error
+    description: A national month has 10-21 million rows; far fewer means a truncated or wrong file.
+  - name: unique_document
+    type: library
+    metric: duplicateValues
+    mustBe: 0
+    arguments:
+      properties:
+      - co_documento
+    dimension: uniqueness
+    severity: warning
+    description: co_documento was unique in all samples.
+slaProperties:
+- property: frequency
+  value: 1
+  unit: month
+  description: One file per vaccination month; past months are re-published irregularly.
+- property: latency
+  value: 31
+  unit: d
+  element: sipni_doses.dt_entrada_rnds
+  description: Median registration lag observed (dt_entrada_rnds - dt_vacina); p90 58 days, max 583.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- sus
+- si-pni
+- vaccination
+- open-data
+customProperties:
+- property: layer
+  value: source
+- property: encoding
+  value: ISO-8859-1
+- property: observedOn
+  value: '2026-11-25'
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

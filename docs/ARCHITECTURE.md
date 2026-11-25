@@ -182,7 +182,7 @@ simulation assumption and never affects the daily/yearly indicators.
 | Table format | **Delta Lake** (`delta-spark`, version matched to Spark) | Adds ACID transactions, MERGE, time travel, schema enforcement and Change Data Feed on top of Parquet. Native format of Fabric OneLake and Databricks. | [0002](adr/0002-delta-lake-medallion-on-pyspark.md) |
 | File format | **Parquet** (inside Delta), CSV/JSON in landing | Columnar, compressed, statistics per file for data skipping. | — |
 | Streaming | **Spark Structured Streaming** (file source, Delta source/sink) | Same DataFrame API for batch and stream; exactly-once with checkpoints + idempotent sinks. Kafka optional. | [0004](adr/0004-file-based-streaming-simulation.md) |
-| Data contracts | **Open Data Contract Standard (ODCS) v3** YAML | Vendor-neutral standard (Linux Foundation / Bitol) for schema, quality rules, SLAs and ownership. | [0006](adr/0006-odcs-data-contracts.md) |
+| Data contracts | **Open Data Contract Standard (ODCS) v3.2.0** YAML, validated against the official JSON Schema | Vendor-neutral standard (Linux Foundation / Bitol) for schema, quality rules, SLAs and ownership. | [0006](adr/0006-odcs-data-contracts.md) |
 | Data quality | **Great Expectations (GX Core 1.x)** on Spark DataFrames | Most widely adopted open-source DQ framework; expectations double as documentation (Data Docs). Soda is the main alternative. | [0005](adr/0005-great-expectations-for-data-quality.md) |
 | Lineage | **OpenLineage** Spark listener | Open standard for lineage events, consumed by Marquez, DataHub, Microsoft Purview, Unity Catalog. | [0008](adr/0008-openlineage-for-lineage.md) |
 | Catalog | Spark SQL catalog (local Hive-compatible metastore) + catalog docs generated from contracts | Same `database.table` model as Unity Catalog / Fabric; "catalog as code". | [0008](adr/0008-openlineage-for-lineage.md) |
@@ -423,7 +423,7 @@ silver_df = (
 
 ### 6.5 Data contracts (ODCS)
 
-- One contract per table and per source in `contracts/`, ODCS v3 YAML: schema (name, type, nullability, description, source column), primary key, quality rules, freshness SLA, owner, classification (`sensitive` columns flagged).
+- One contract per table and per source in `contracts/` ([conventions](../contracts/README.md)), ODCS v3.2.0 YAML: schema (name, type, nullability, description, source column via `transformSourceObjects`), primary key, quality rules, freshness SLA, owner, privacy classification. `scripts/validate_contracts.py` checks them against the official JSON Schema in every test run.
 - The contract is the **single source of truth**: Spark schemas, GX expectations, table/column comments and catalog docs are **generated** from it. No schema is written twice.
 - **Semantic versioning:** removing/renaming/retyping a column = *major* (breaking); adding a nullable column = *minor*; descriptions = *patch*. CI fails a breaking change without a major bump.
 - Bronze contract mirrors the source; silver/gold contracts describe what consumers can rely on.
