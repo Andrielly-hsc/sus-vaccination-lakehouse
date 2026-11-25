@@ -1,0 +1,10 @@
+# Development in a codespace: a small scope keeps downloads and the storage quota low.
+# Widen it (or use VAXLAKE_SCOPE__* variables) for the full backfill.
+
+scope:
+  ufs: [ES, SP]             # smallest and largest Southeast states: skew from day one
+  start_month: "2025-01"
+  end_month: "2025-03"
+
+logging:
+  json_format: false        # human-readable logs in the terminal
