@@ -51,9 +51,10 @@ flowchart LR
 
 ## Quick start
 
-1. Click **Open in GitHub Codespaces** above (2-core machine). The dev container installs
-   Java 17, Python 3.11 and the locked dependencies — details in [docs/setup.md](docs/setup.md).
-2. In the codespace terminal:
+1. **Zero install:** click **Open in GitHub Codespaces** above (2-core machine); the dev container
+   installs Java 17, Python 3.11 and the locked dependencies.
+   **Locally:** WSL2 or any Linux with Java 17 and Python 3.11, see [docs/setup.md](docs/setup.md).
+2. In the terminal:
 
    ```bash
    pytest                # unit + Spark tests

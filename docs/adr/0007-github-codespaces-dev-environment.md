@@ -1,6 +1,6 @@
 # ADR-0007: GitHub Codespaces as the development environment
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0010](0010-wsl2-for-development-dev-container-for-visitors.md)
 - **Date:** 2026-11-25
 
 ## Context
