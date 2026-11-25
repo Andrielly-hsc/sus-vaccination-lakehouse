@@ -15,7 +15,7 @@ Load IBGE municipalities, SINASC live births and seed tables into `bronze.ref_*`
 ## Steps
 
 1. Downloader adapters for IBGE and SINASC (or documented manual download if no stable API)
-2. Seeds (`pni_targets`, `vaccine_dose_map`) loaded from `seeds/`
+2. Seeds (`coverage_indicators`, `vaccines`, `doses`) loaded from `seeds/`
 3. Overwrite by vintage with `replaceWhere` so re-runs are idempotent
 4. Record vintage and source in table properties
 

@@ -264,8 +264,8 @@ sus-vaccination-lakehouse/
 |---|---|---|---|---|
 | **SI-PNI doses applied** (OpenDataSUS) | Anonymised individual vaccination records, 56 columns, Latin-1 `;` CSV in monthly ZIPs; past months are re-published | One dose | Monthly files, national | Facts |
 | **IBGE municipalities** | Municipality code (7 digits), name, UF, region | Municipality | Yearly | Dimension, code conformance |
-| **SINASC live births** (DATASUS/OpenDataSUS) | Live births by municipality of residence | Municipality × year | Yearly | Coverage denominator (children < 1 and 1 year old) |
-| **PNI targets** (seed file from PNI technical notes) | Target coverage per vaccine (e.g. BCG 90 %, others 95 %) and which dose completes the schedule | Vaccine | Rarely changes | Indicator thresholds |
+| **SINASC live births** (OpenDataSUS) | Live births by municipality of residence; microdata aggregated to counts at ingestion | Municipality × year | Yearly (current year preliminary) | Coverage denominator (children < 1 and 1 year old) |
+| **Coverage indicators, vaccines, doses** (seeds, [`seeds/README.md`](../seeds/README.md)) | Per indicator: vaccines that count, doses required, target age, minimum interval, target (BCG/rotavirus 90 %, others 95 %); vaccine and dose code tables | Indicator / code | Rarely changes | Indicator rules and thresholds |
 
 Exact URLs, file names, encoding and columns are confirmed in
 [F02-T01](tasks/F02-T01-source-discovery.md) and documented in
@@ -330,7 +330,7 @@ erDiagram
 
 | Indicator | Formula | Notes |
 |---|---|---|
-| **Vaccination coverage** | doses completing the schedule in the target age group ÷ target population × 100 | Denominator for < 1 and 1-year-olds = SINASC live births. Counted by municipality of **residence**. Can exceed 100 % (denominator errors, people vaccinated outside their municipality) — reported, not capped. |
+| **Vaccination coverage** | **individuals** who completed the schedule in the target age group ÷ target population × 100 | Official method since 2024 (NT 90/2025-DPNI): stage 1 = enough doses respecting age and minimum interval; stage 2 = last dose by "dose type"; each person once (needs `patient_key`). Denominator for < 1 and 1-year-olds = SINASC live births. Counted by municipality of **residence**. Can exceed 100 % — reported, not capped. The share of stage-2 people is reported as a data-quality indicator. |
 | **Dropout rate** | (first doses − last doses) ÷ first doses × 100 | Class: low < 5 %, medium 5–10 %, high ≥ 10 %. |
 | **Homogeneity** | % of municipalities (in a UF) that reach the target for a vaccine | Equity view of coverage. |
 | **Registration timeliness** | `registered_at − vaccination_date` in days | p50, p90 and % within 7/30 days, per municipality and facility. |

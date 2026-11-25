@@ -45,7 +45,7 @@ Understand the public sources precisely and write machine-readable data contract
 |---|---|---|---|
 | [F02-T01](../tasks/F02-T01-source-discovery.md) | Discover and document the SI-PNI source | 3 h | In Review |
 | [F02-T02](../tasks/F02-T02-data-dictionary.md) | Write the data dictionary | 3 h | In Review |
-| [F02-T03](../tasks/F02-T03-reference-data-sources.md) | Identify reference data and PNI targets | 2 h | To Do |
+| [F02-T03](../tasks/F02-T03-reference-data-sources.md) | Identify reference data and PNI targets | 2 h | In Review |
 | [F02-T04](../tasks/F02-T04-data-contracts-odcs.md) | Write ODCS contracts for all tables | 3 h | To Do |
 | [F02-T05](../tasks/F02-T05-contract-loader-and-schema-generation.md) | Generate Spark schemas from contracts | 3 h | To Do |
 | [F02-T06](../tasks/F02-T06-privacy-assessment.md) | LGPD privacy assessment | 2 h | To Do |

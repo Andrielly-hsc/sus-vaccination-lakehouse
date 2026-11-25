@@ -1,0 +1,50 @@
+dose_code,dose_name,dose_kind,dose_number
+1,1ª Dose,primary,1
+2,2ª Dose,primary,2
+3,3ª Dose,primary,3
+4,4ª Dose,primary,4
+5,5ª Dose,primary,5
+6,1º Reforço,booster,1
+7,2º Reforço,booster,2
+8,Dose,unspecified,
+9,Única,single,1
+10,Revacinação,revaccination,1
+11,Tratamento com uma dose,treatment,
+13,Tratamento com três doses,treatment,
+14,Tratamento com quatro doses,treatment,
+15,Tratamento com cinco doses,treatment,
+16,Tratamento com seis doses,treatment,
+17,Tratamento com sete doses,treatment,
+32,1ª Dose Revacinação,revaccination,1
+33,2ª Dose Revacinação,revaccination,2
+34,3ª Dose Revacinação,revaccination,3
+35,4ª Dose Revacinação,revaccination,4
+36,Dose Inicial,initial,
+37,Dose Adicional,additional,
+38,Reforço,booster,1
+39,3º Reforço,booster,3
+40,4º Reforço,booster,4
+43,5ª Dose Revacinação,revaccination,5
+44,1ª Dose Fracionada,primary,1
+45,2ª Dose Fracionada,primary,2
+49,1ª Dose Dobrada,primary,1
+50,2ª Dose Dobrada,primary,2
+51,3ª Dose Dobrada,primary,3
+52,4ª Dose Dobrada,primary,4
+53,1ª Dose Revacinação Dobrada,revaccination,1
+54,2ª Dose Revacinação Dobrada,revaccination,2
+55,3ª Dose Revacinação Dobrada,revaccination,3
+56,4ª Dose Revacinação Dobrada,revaccination,4
+57,Dose Zero,zero,0
+59,Profilaxia/Tratamento com 1 unidade,treatment,
+60,Profilaxia/Tratamento com 2 unidades,treatment,
+61,Profilaxia/Tratamento com 3 unidades,treatment,
+62,Profilaxia/Tratamento com 4 unidades,treatment,
+63,Profilaxia/Tratamento com 5 unidades,treatment,
+64,Profilaxia/Tratamento com 6 unidades,treatment,
+65,Profilaxia/Tratamento com 7 unidades,treatment,
+66,Profilaxia/Tratamento com 8 unidades,treatment,
+68,Profilaxia/Tratamento com 10 unidades,treatment,
+70,Profilaxia/Tratamento com 12 unidades,treatment,
+71,Profilaxia/Tratamento com 13 unidades,treatment,
+73,Profilaxia/Tratamento com 15 unidades,treatment,

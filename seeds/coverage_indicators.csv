@@ -1,0 +1,16 @@
+indicator_id,indicator_name,vaccine_codes,doses_required,completing_dose_codes,target_age_years,min_interval_days,denominator,target_pct,computable,notes
+bcg,BCG,15,1,9,0,,sinasc_live_births,90,true,Single dose at birth
+hepb_newborn,Hepatitis B at birth (up to 30 days),9,1,9|1,0,,sinasc_live_births,95,false,Needs age in days; the open data has age in whole years only
+penta_d3,Pentavalent (DTP-HepB-Hib) 3rd dose,42|43,3,3,0,30,sinasc_live_births,95,true,Hexavalent (43) also counts; national pact indicator (Portaria GM/MS 6.878/2025)
+polio_d3,Polio inactivated (VIP) 3rd dose,22|43|29,3,3,0,30,sinasc_live_births,95,true,Hexavalent (43) and acellular penta (29) contain VIP; national pact indicator
+pneumo10_d2,Pneumococcal 10-valent 2nd dose,26,2,2,0,30,sinasc_live_births,95,true,National pact indicator
+rotavirus_d2,Rotavirus 2nd dose,45,2,2,0,30,sinasc_live_births,90,true,Age limits for 1st and 2nd dose are stricter than the year granularity allows
+menc_d2,Meningococcal C 2nd dose,41,2,2,0,30,sinasc_live_births,95,true,
+yellow_fever_d1,Yellow fever 1st dose,14,1,1|9,0,,sinasc_live_births,95,true,Dose at 9 months; target and age group to confirm in reconciliation (F06-T06)
+mmr_d1,MMR (SCR) 1st dose,24|56,1,1,1,,sinasc_live_births,95,true,MMRV (56) also counts; national pact indicator
+mmr_d2,MMR 2nd dose,24|56,2,2,1,30,sinasc_live_births,95,true,NT 90/2025 §7.2: children with a single dose recorded as D2 may be counted twice
+pneumo10_booster,Pneumococcal 10-valent booster,26,3,6|38,1,60,sinasc_live_births,95,true,Booster at 12 months
+menc_booster,Meningococcal booster (MenACWY since 2025),41|74,3,6|38,1,60,sinasc_live_births,95,true,Booster at 12 months with MenACWY (74) under the 2025 calendar
+dtp_booster1,DTP 1st booster,46|42|43,4,6|38,1,180,sinasc_live_births,95,true,Booster at 15 months after 3 doses of penta
+polio_booster,Polio booster (VIP since 2025),22|43|29,4,6|38,1,180,sinasc_live_births,95,true,Booster at 15 months; was VOPb (28) before the 2025 calendar
+hepatitis_a,Hepatitis A,55,1,9|1,1,,sinasc_live_births,95,true,Single dose at 15 months
