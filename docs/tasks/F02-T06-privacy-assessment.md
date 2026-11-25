@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F02 — Source discovery & data contracts](../features/F02-source-discovery-and-data-contracts.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 2 h |
 | **Depends on** | [F02-T02](F02-T02-data-dictionary.md) |
 | **Branch** | `feat/F02-T06-privacy-assessment` |
@@ -21,11 +21,13 @@ Assess re-identification risk and define the minimisation and disclosure-control
 
 ## Acceptance criteria
 
-- [ ] `privacy_assessment.md` lists each rule and the task that implements it
+- [x] `privacy_assessment.md` lists each rule and the task that implements it (P1–P11)
 
 ## Deliverables
 
 - `docs/data/privacy_assessment.md`
+- `scripts/discovery/reidentification_risk.py`
+- `privacy.suppression_threshold` in `conf/base.yaml` / `config.py`
 
 ## Why this matters (best practice)
 
@@ -33,4 +35,8 @@ Even 'anonymised' open data can be re-identified when combined. Privacy-by-desig
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- The plan assumed a birth date to coarsen; the file has none (age in whole years), so the main minimisation is dropping columns (P1) and keeping the pseudonym out of gold (P3).
+- **Measured** re-identification risk with k-anonymity on 300 000 sample rows: municipality alone 0 % unique, municipality + age + sex 23 %, municipality + date + age + sex 69 %, CEP prefix + date + age + sex 89 %. Upper bounds (sample), but they justify keeping record-level data inside the lakehouse.
+- Suppression covers the **complement** too: a coverage of 7/8 reveals the one unvaccinated child, so the rule also checks target population − vaccinated.
+- Legal context written for LGPD with the GDPR equivalents next to it (relevant for an EU employer). Technical assessment, not legal advice.
+- The threshold is configuration (`privacy.suppression_threshold`, minimum 3), validated and tested, so gold (F06) and the dashboard (F11) read the same value.

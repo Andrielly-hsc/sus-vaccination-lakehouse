@@ -24,6 +24,9 @@ spark:
     # Our logs are small, so fewer partitions avoid scheduling dozens of tiny tasks.
     spark.databricks.delta.snapshotPartitions: "8"
 
+privacy:
+  suppression_threshold: 5  # small-cell suppression k (docs/data/privacy_assessment.md, P6)
+
 logging:
   level: INFO
   json_format: true
