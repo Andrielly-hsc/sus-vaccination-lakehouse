@@ -27,6 +27,7 @@ each in its own Markdown file, versioned with the code.
 | [0006](adr/0006-odcs-data-contracts.md) | Data contracts in the Open Data Contract Standard |
 | [0007](adr/0007-github-codespaces-dev-environment.md) | GitHub Codespaces as the development environment |
 | [0008](adr/0008-openlineage-for-lineage.md) | OpenLineage for lineage, catalog as code |
+| [0009](adr/0009-spark-and-delta-version-pins.md) | Pin Spark 4.1 with Delta Lake 4.4 |
 
 ## Backlog
 
@@ -34,7 +35,7 @@ each in its own Markdown file, versioned with the code.
 
 | ID | Feature | Priority | Depends on | Tasks | Estimate | Status |
 |---|---|---|---|---|---|---|
-| [F01](features/F01-project-setup.md) | Project setup & engineering standards | Must | — | 7 | 12 h | To Do |
+| [F01](features/F01-project-setup.md) | Project setup & engineering standards | Must | — | 7 | 12 h | In Review |
 | [F02](features/F02-source-discovery-and-data-contracts.md) | Source discovery & data contracts | Must | F01 | 6 | 16 h | To Do |
 | [F03](features/F03-batch-ingestion-bronze.md) | Batch ingestion into bronze | Must | F02 | 6 | 14 h | To Do |
 | [F04](features/F04-streaming-simulation.md) | Real-time feed simulation & streaming bronze | Must | F03 | 6 | 15.5 h | To Do |

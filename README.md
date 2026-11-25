@@ -5,10 +5,12 @@
 > and simulated real-time ingestion in PySpark + Delta Lake, data contracts, quality gates,
 > partition-skew analysis, catalog and lineage.
 
-![Status](https://img.shields.io/badge/status-planning-lightgrey)
+[![CI](https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/actions/workflows/ci.yml/badge.svg)](https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/actions/workflows/ci.yml)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Andrielly-hsc/sus-vaccination-lakehouse?quickstart=1)
+
 ![Python](https://img.shields.io/badge/python-3.11-blue)
-![Spark](https://img.shields.io/badge/Apache%20Spark-4.x-orange)
-![Delta Lake](https://img.shields.io/badge/Delta%20Lake-4.x-00ADD4)
+![Spark](https://img.shields.io/badge/Apache%20Spark-4.1-orange)
+![Delta Lake](https://img.shields.io/badge/Delta%20Lake-4.4-00ADD4)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
@@ -41,11 +43,23 @@ flowchart LR
 
 ## Status
 
-🚧 **Planning complete, implementation starting.** The full design lives in [`docs/`](docs/):
+🚧 **F01 (project setup) done; data features next.** The full design lives in [`docs/`](docs/):
 
 - [Architecture](docs/ARCHITECTURE.md) — design and market-standard conventions per technology
 - [Backlog](docs/README.md) — 12 features, 63 tasks
 - [Architecture Decision Records](docs/adr/)
+
+## Quick start
+
+1. Click **Open in GitHub Codespaces** above (2-core machine). The dev container installs
+   Java 17, Python 3.11 and the locked dependencies — details in [docs/setup.md](docs/setup.md).
+2. In the codespace terminal:
+
+   ```bash
+   pytest                # unit + Spark tests
+   vaxlake info          # versions and active configuration
+   vaxlake smoke-test    # starts Spark, writes and reads a Delta table
+   ```
 
 ## Data
 

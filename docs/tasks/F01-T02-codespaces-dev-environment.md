@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 3 h |
 | **Depends on** | [F01-T01](F01-T01-initialize-repository.md) |
 | **Branch** | `feat/F01-T02-codespaces-dev-environment` |
@@ -37,4 +37,6 @@ Dev containers are the industry standard for reproducible environments: the setu
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Image `mcr.microsoft.com/devcontainers/python:1-3.11-bookworm` + feature `java:1` (Temurin 17, same JDK as CI).
+- `postCreateCommand` → `scripts/post_create.sh` (idempotent; installs the lock file, the package and the git hooks).
+- Not yet verified in a real codespace: the author opens the first one after this PR is merged. The idle timeout (30 min) is a personal GitHub setting, documented in `docs/setup.md`.

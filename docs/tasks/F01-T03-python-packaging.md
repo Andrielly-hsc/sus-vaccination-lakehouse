@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 1.5 h |
 | **Depends on** | [F01-T02](F01-T02-codespaces-dev-environment.md) |
 | **Branch** | `feat/F01-T03-python-packaging` |
@@ -37,4 +37,7 @@ Loose ranges in `pyproject.toml` declare compatibility; the lock file makes buil
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- PySpark 4.1.4 + delta-spark 4.4.1 ([ADR-0009](../adr/0009-spark-and-delta-version-pins.md)). delta-spark 4.4 allows Spark ≤ 4.2 and Great Expectations' Spark extra requires < 4.2, hence 4.1.
+- Delta ≥ 4.1 names its JAR with the Spark version (`io.delta:delta-spark_4.1_2.13`); `configure_spark_with_delta_pip()` picks it automatically.
+- Lock compiled with pip-tools on Python 3.11. It contains `colorama` (a Windows-only dependency of click/pytest) because it was compiled on Windows; harmless on Linux.
+- Windows-only pitfall found: Python 3.11 reads `.pth` files with the locale encoding, so an editable install fails when the path has non-ASCII characters (`Portifólio`). Irrelevant in Codespaces/CI (paths are ASCII).

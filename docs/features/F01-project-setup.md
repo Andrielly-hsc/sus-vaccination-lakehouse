@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | To Do |
+| **Status** | In Review |
 | **Priority** | Must (MoSCoW) |
 | **Depends on** | — |
 | **Estimate** | 12 h |
@@ -43,13 +43,13 @@ A reproducible Linux-based Spark + Delta development environment, packaging, qua
 
 | ID | Task | Estimate | Status |
 |---|---|---|---|
-| [F01-T01](../tasks/F01-T01-initialize-repository.md) | Initialise repository conventions | 1 h | To Do |
-| [F01-T02](../tasks/F01-T02-codespaces-dev-environment.md) | Set up the Codespaces dev container | 3 h | To Do |
-| [F01-T03](../tasks/F01-T03-python-packaging.md) | Package the project and pin Spark/Delta | 1.5 h | To Do |
-| [F01-T04](../tasks/F01-T04-code-quality-tooling.md) | Configure ruff and pre-commit | 1 h | To Do |
-| [F01-T05](../tasks/F01-T05-spark-session-and-config.md) | SparkSession factory, config profiles and logging | 2 h | To Do |
-| [F01-T06](../tasks/F01-T06-test-scaffolding.md) | Test scaffolding with a shared Spark fixture | 1.5 h | To Do |
-| [F01-T07](../tasks/F01-T07-ci-pipeline.md) | GitHub Actions CI with Java 17 | 2 h | To Do |
+| [F01-T01](../tasks/F01-T01-initialize-repository.md) | Initialise repository conventions | 1 h | In Review |
+| [F01-T02](../tasks/F01-T02-codespaces-dev-environment.md) | Set up the Codespaces dev container | 3 h | In Review |
+| [F01-T03](../tasks/F01-T03-python-packaging.md) | Package the project and pin Spark/Delta | 1.5 h | In Review |
+| [F01-T04](../tasks/F01-T04-code-quality-tooling.md) | Configure ruff and pre-commit | 1 h | In Review |
+| [F01-T05](../tasks/F01-T05-spark-session-and-config.md) | SparkSession factory, config profiles and logging | 2 h | In Review |
+| [F01-T06](../tasks/F01-T06-test-scaffolding.md) | Test scaffolding with a shared Spark fixture | 1.5 h | In Review |
+| [F01-T07](../tasks/F01-T07-ci-pipeline.md) | GitHub Actions CI with Java 17 | 2 h | In Review |
 
 ## Syllabus topics covered
 
