@@ -1,0 +1,500 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-silver-vaccination-doses
+name: Silver vaccination doses
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: 'One trusted row per dose: typed, English names, minimised (21 source columns dropped), deduplicated
+    and conformed, from both the batch and the streaming paths.'
+  usage: Base of every gold table. Analysts use gold; silver is for engineers and data-quality work.
+  limitations: 'Contains the pseudonymous patient_key: restricted to the lakehouse, never exported. Real-time
+    rows are provisional until the batch path reconciles them.'
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/silver/
+  format: delta
+  environment: dev
+schema:
+- name: vaccination_doses
+  physicalName: silver.vaccination_doses
+  physicalType: table
+  description: Valid doses after MERGE on dose_id; replaced and deleted documents are flagged.
+  dataGranularityDescription: One row per dose_id.
+  properties:
+  - name: dose_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: id
+    description: RNDS document id (business key).
+    primaryKey: true
+    primaryKeyPosition: 1
+    criticalDataElement: true
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_documento
+  - name: patient_key
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: pseudonym
+    description: Pseudonymous patient id; needed for the individual-based coverage method. Never leaves
+      silver.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_paciente
+  - name: sex
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: quasi
+    description: F, M or I.
+    enum:
+    - value: F
+    - value: M
+    - value: I
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.tp_sexo_paciente
+  - name: age_years
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: quasi
+    description: Age in whole years at vaccination; 0 = under one year.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.nu_idade_paciente
+    transformLogic: CAST(nu_idade_paciente AS INT)
+  - name: residence_municipality_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: 6-digit residence municipality; null when missing or 999999.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_municipio_paciente
+    transformLogic: NULLIF(co_municipio_paciente, '999999')
+  - name: residence_municipality_code_7
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: 7-digit IBGE code (join with the IBGE reference).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_municipio_paciente
+    - bronze.ref_ibge_municipalities.municipio_id
+  - name: residence_country_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: 10 = Brazil.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_pais_paciente
+  - name: residence_uf
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: quasi
+    description: Residence UF.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.sg_uf_paciente
+  - name: establishment_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: CNES, 7 digits.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_cnes_estabelecimento
+  - name: establishment_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility trade name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.no_fantasia_estalecimento
+  - name: establishment_legal_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility legal name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.no_razao_social_estabelecimento
+  - name: establishment_type_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility type.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_tipo_estabelecimento
+  - name: establishment_type_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: CNES facility type name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_tipo_estabelecimento
+  - name: establishment_nature_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Legal nature (public, private...).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_natureza_estabelecimento
+  - name: establishment_nature_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Legal nature name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_natureza_estabelecimento
+  - name: facility_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: 6-digit facility municipality.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_municipio_estabelecimento
+  - name: facility_uf
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Facility UF.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.sg_uf_estabelecimento
+  - name: replaces_dose_id
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: id
+    description: Document this one replaces; the replaced dose is retired.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_troca_documento
+  - name: vaccine_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Vaccine code (seeds/vaccines.csv).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_vacina
+  - name: vaccine_acronym
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccine acronym.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.sg_imunobiologico
+  - name: vaccine_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccine full name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_nome
+  - name: dose_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Dose code (seeds/doses.csv).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_dose_vacina
+  - name: dose_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Dose description.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_tipo_dose
+  - name: vaccine_lot
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccine lot.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_lote_vacina
+  - name: manufacturer_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Manufacturer code.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_vacina_fabricante
+  - name: manufacturer_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Manufacturer name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_vacina_fabricante
+  - name: vaccination_date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: operational
+    description: Vaccination date (event time).
+    criticalDataElement: true
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.dt_vacina
+  - name: registered_date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: operational
+    description: Date the record entered the RNDS (processing time).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.dt_entrada_rnds
+  - name: source_system_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Source system installation.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_sistema_origem
+  - name: source_system_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Source system name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_sistema_origem
+  - name: document_status
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: RNDS document status.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.st_documento
+  - name: strategy_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Vaccination strategy (1 = routine).
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_estrategia_vacinacao
+  - name: strategy_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Strategy name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.no_estrategia
+  - name: record_origin_code
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: 01 transcription, 02 abroad.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.co_origem_registro
+  - name: record_origin_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: operational
+    description: Record origin name.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.ds_origem_registro
+  - name: deleted_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: false
+    classification: operational
+    description: Deletion in the RNDS.
+    transformSourceObjects:
+    - bronze.sipni_doses_raw.dt_deletado_rnds
+  - name: vaccination_month
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: YYYY-MM of vaccination_date; partition column.
+    partitioned: true
+    partitionKeyPosition: 1
+    transformLogic: date_format(vaccination_date, 'yyyy-MM')
+  - name: registration_lag_days
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: registered_date - vaccination_date.
+    transformLogic: datediff(registered_date, vaccination_date)
+  - name: is_replacement
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: operational
+    description: replaces_dose_id is not null.
+  - name: is_deleted
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: operational
+    description: deleted_at is not null.
+  - name: is_transcription
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: operational
+    description: Record transcribed from a card or abroad (excluded from timeliness).
+  - name: _source_file
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Landing file of the winning version of this dose.
+  - name: _file_hash
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Hash of that file.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+  - name: _updated_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: Last MERGE that changed the row.
+  quality:
+  - name: unique_dose_id
+    type: library
+    metric: duplicateValues
+    arguments:
+      properties:
+      - dose_id
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: (dose_id) identifies one row.
+  - name: required_dose_id_patient_key_vaccination_date_registered_date_vaccine_code_dose_code_establishment_code
+    type: library
+    metric: nullValues
+    arguments:
+      properties:
+      - dose_id
+      - patient_key
+      - vaccination_date
+      - registered_date
+      - vaccine_code
+      - dose_code
+      - establishment_code
+    mustBe: 0
+    dimension: completeness
+    severity: error
+    description: dose_id, patient_key, vaccination_date, registered_date, vaccine_code, dose_code, establishment_code
+      never null.
+  - name: no_future_vaccination
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE vaccination_date > current_date() OR vaccination_date
+      < DATE'2020-01-01'
+    mustBe: 0
+    dimension: conformity
+    severity: error
+    description: Vaccination dates between 2020-01-01 and today.
+  - name: registered_after_vaccination
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE registered_date < vaccination_date
+    mustBe: 0
+    dimension: consistency
+    severity: error
+    description: A record cannot reach the RNDS before the vaccination (0 in samples).
+  - name: valid_age
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE age_years NOT BETWEEN 0 AND 130
+    mustBe: 0
+    dimension: conformity
+    severity: error
+    description: age_years between 0 and 130 (rows outside are quarantined before the MERGE).
+  - name: establishment_code_format
+    type: library
+    metric: invalidValues
+    mustBe: 0
+    arguments:
+      properties:
+      - establishment_code
+      pattern: ^[0-9]{7}$
+    dimension: conformity
+    severity: error
+    description: CNES has 7 digits (14-character codes go to quarantine).
+  - name: residence_mostly_known
+    type: library
+    metric: nullValues
+    mustBeLessOrEqualTo: 3
+    unit: percent
+    arguments:
+      properties:
+      - residence_municipality_code
+    dimension: completeness
+    severity: warning
+    description: At most 3 % of doses without residence municipality (1.5 % in samples); coverage is counted
+      by residence.
+  - name: known_vaccine_codes
+    type: sql
+    dimension: conformity
+    severity: warning
+    mustBe: 0
+    query: SELECT COUNT(*) FROM ${object} d LEFT ANTI JOIN bronze.ref_vaccines v ON d.vaccine_code = v.vaccine_code
+    description: 'New vaccine codes appear over time: warn and update seeds/vaccines.csv.'
+  tags:
+  - contains-pseudonym
+slaProperties:
+- property: latency
+  value: 1
+  unit: d
+  description: 'Batch path: silver reflects landing within one day of a download. Streaming path: within
+    minutes.'
+- property: retention
+  value: 5
+  unit: y
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- silver
+- si-pni
+customProperties:
+- property: layer
+  value: silver
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

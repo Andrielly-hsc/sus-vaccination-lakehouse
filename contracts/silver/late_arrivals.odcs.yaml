@@ -1,0 +1,111 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-silver-late-arrivals
+name: Silver late-arriving events
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: 'Streaming events older than the watermark: not lost, kept here until the batch path reconciles
+    them into vaccination_doses.'
+  usage: Reconciliation job; monitoring of how much the real-time view misses.
+  limitations: Defined in detail with the event envelope (F04-T01) and the streaming silver (F05-T04).
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/silver/
+  format: delta
+  environment: dev
+schema:
+- name: late_arrivals
+  physicalName: silver.late_arrivals
+  physicalType: table
+  description: Events dropped by the streaming watermark.
+  dataGranularityDescription: One row per event_id.
+  properties:
+  - name: event_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: id
+    description: Event id from the envelope.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: dose_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: id
+    description: Dose in the payload.
+  - name: event_time
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: operational
+    description: Vaccination time (synthesised time of day).
+  - name: emitted_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: operational
+    description: When the replayer emitted the event.
+  - name: watermark_at_arrival
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: Watermark of the query when the event arrived.
+  - name: payload
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: pseudonym
+    description: Event payload as JSON.
+  - name: is_reconciled
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: technical
+    description: Merged into vaccination_doses by the batch path.
+  - name: _batch_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: technical
+    description: Ingestion run that wrote the row.
+  - name: _ingested_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: When the row was written (UTC).
+  quality:
+  - name: unique_event_id
+    type: library
+    metric: duplicateValues
+    arguments:
+      properties:
+      - event_id
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: (event_id) identifies one row.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- silver
+- streaming
+customProperties:
+- property: layer
+  value: silver
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

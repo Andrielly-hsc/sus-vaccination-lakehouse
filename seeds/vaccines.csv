@@ -1,0 +1,81 @@
+vaccine_code,vaccine_acronym,vaccine_name,product_type
+1,IGHAT,imunoglobulina humana antitétano,immunoglobulin
+2,SAT,soro antitetânico,serum
+3,SAAR,"soro antiaracnídico (Loxosceles, Phoneutria, Tityus)",serum
+4,SAESC,soro antiescorpiônico,serum
+5,DT,vacina adsorvida difteria e tétano infantil,vaccine
+7,SAR,soro antirrábico,serum
+8,SABR,soro antibotrópico (pentavalente),serum
+9,HB,vacina hepatite B (recombinante),vaccine
+12,SABL,soro antibotrópico (pentavalente) e antilaquético,serum
+14,VFA,vacina febre amarela (atenuada),vaccine
+15,BCG,vacina BCG,vaccine
+16,SAC,soro anticrotálico,serum
+17,Hib,vacina Haemophilus influenza B (conjugada),vaccine
+18,VR-EG,vacina raiva (inativada),vaccine
+20,IGHAHB,imunoglobulina humana anti-hepatite B,immunoglobulin
+21,VPP23,vacina pneumocócica 23-valente (polissacarídica),vaccine
+22,VIP,"vacina poliomelite 1, 2 e 3 (inativada)",vaccine
+23,IGHAR,imunoglobulina humana antirrábica,immunoglobulin
+24,SCR,"vacina sarampo, caxumba, rubéola (atenuada)",vaccine
+25,dT,vacina adsorvida difteria e tétano adulto,vaccine
+26,VPC10,vacina pneumocócica 10-valente (conjugada),vaccine
+28,VOPb,vacina poliomielite 1 e 3 (atenuada),vaccine
+29,Penta acelular,"vacina adsorvida difteria, tétano, pertussis (acelular), poliomielite 1, 2 e 3 (inativada) e Haemophilus influenzae B (conjugada)",vaccine
+30,FTp,vacina febre tifóide (polissacarídica),vaccine
+33,INF3,"vacina influenza trivalente (fragmentada, inativada)",vaccine
+34,VZ,vacina varicela (atenuada),vaccine
+35,HA virossomal,vacina adsorvida hepatite A (virossomal),vaccine
+36,SR,"vacina sarampo, rubéola (atenuada)",vaccine
+37,VR,vacina raiva (inativada),vaccine
+39,Tetra,"vacina adsorvida difteria, tétano, pertussis e Haemophilus influenzae B (conjugada)",vaccine
+41,MenC,vacina meningocócica C (conjugada),vaccine
+42,Penta,"vacina adsorvida difteria, tétano, pertussis, hepatite B (recombinante) e Haemophilus influenzae B (conjugada)",vaccine
+43,Hexa acelular,"vacina adsorvida difteria, tétano, pertussis (acelular), hepatite B (recombinante), poliomielite 1, 2 e 3 (inativada), Haemophilus influenzae B (conjugada)",vaccine
+44,INFH1N1-2009,"vacina influenza tipo A (H1N1) (inativada, fragmentada)",vaccine
+45,ROTA,vacina rotavírus humano G1P[8] (atenuada),vaccine
+46,DTP,"vacina adsorvida difteria, tétano e pertussis",vaccine
+47,DTPa,"vacina adsorvida difteria, tétano e pertussis (acelular)",vaccine
+51,Fta,vacina febre tifóide (atenuada),vaccine
+55,HAinf,vacina adsorvida hepatite A (inativada),vaccine
+56,SCRV,"vacina sarampo, caxumba, rubéola e varicela (atenuada)",vaccine
+57,dTpa,"vacina adsorvida difteria, tétano e pertussis (acelular)",vaccine
+58,DTPa/VIP,"vacina adsorvida difteria, tétano, pertussis (acelular), poliomielite 1, 2 e 3 (inativada)",vaccine
+59,VPC13,vacina pneumocócica 13-valente (conjugada),vaccine
+60,HPV2,vacina papilomavírus humano 16 e 18 (recombinante),vaccine
+61,Tétano,vacina tétano (inativada),vaccine
+62,HA-HBinf,vacina adsorvida hepatite A e hepatite B (recombinante),vaccine
+63,HA-HBad,vacina adsorvida hepatite A e hepatite B (recombinante),vaccine
+64,INF3-ID,"vacina influenza trivalente (fragmentada, inativada) intradérmica",vaccine
+65,ROTA5,"vacina rotavírus humano/bovino G1, G2, G3, G4 e P1A[8] (atenuada)",vaccine
+66,MenBC,vacina meningocócica BC (polissacarídica),vaccine
+67,HPV4,"vacina papilomavírus humano 6, 11, 16 e 18 (recombinante)",vaccine
+68,HPV2-2,vacina papilomavírus humano 16 e 18 (recombinante),vaccine
+72,INFH1N1-2009-2,"vacina influenza tipo A (H1N1) (inativada, fragmentada)",vaccine
+73,SCRV-2,"vacina sarampo, caxumba, rubéola e varicela (atenuada)",vaccine
+74,MenACWY,vacina meningocócica ACWY (conjugada),vaccine
+76,VHZ,vacina herpes-zóster (atenuada),vaccine
+77,INF4,"vacina influenza tetravalente (fragmentada, inativada)",vaccine
+78,MenB,vacina adsorvida meningocócica B (recombinante),vaccine
+82,Dengue,"vacina dengue 1, 2, 3 e 4 (recombinante e atenuada)",vaccine
+83,HAad,vacina adsorvida hepatite A (inativada),vaccine
+85,COV-19 AST/FIO-CVISH,vacina covid-19 (recombinante),vaccine
+86,COV-19 SINO/BUTAN-CO,vacina adsorvida covid-19 (inativada),vaccine
+87,COV-19 PFIZER-COMIRN,vacina covid-19,vaccine
+93,HPV9,vacina papilomavírus humano 9-valente (recombinante),vaccine
+97,COVID-19 MOD-SPIK,vacina covid-19,vaccine
+99,COV19-RNAm-PED,vacina covid-19,vaccine
+100,VVS,vacina varíola símia (atenuada),vaccine
+101,VHZR,vacina herpes-zóster (recombinante),vaccine
+102,COVID-19 PFIZER-<5a,vacina covid-19,vaccine
+103,COVID-19 PFIZER - BI,vacina covid-19 bivalente,vaccine
+104,DNG,"vacina dengue 1, 2, 3 e 4 (atenuada)",vaccine
+106,VPC15,"vacina adsorvida pneumocócica 15-valente (conjugada, polissacarídica)",vaccine
+107,VPC20,vacina pneumocócica 20-valente (conjugada),vaccine
+108,VVSR-Rec,vacina vírus sincicial respiratório A e B (recombinante),vaccine
+109,VVSR-RecAdj,"vacina vírus sincicial respiratório (recombinante, adjuvada)",vaccine
+110,INF4-alta dosagem,"vacina influenza tetravalente (fragmentada, inativada)",vaccine
+111,dTpa/VIP,"vacina adsorvida difteria, tétano, pertussis (acelular), poliomielite 1, 2 e 3 (inativada)",vaccine
+112,COVID19 SERUM/ZALIKA,vacina covid-19 (recombinante),vaccine
+115,"NIRSEVIMABE 0,5ml","nirsevimabe 0,5ml",monoclonal_antibody
+116,"NIRSEVIMABE 1,0ml","nirsevimabe 1,0ml",monoclonal_antibody

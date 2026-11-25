@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F02 — Source discovery & data contracts](../features/F02-source-discovery-and-data-contracts.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 3 h |
 | **Depends on** | [F01-T05](F01-T05-spark-session-and-config.md) |
 | **Branch** | `feat/F02-T01-source-discovery` |
@@ -22,13 +22,14 @@ Find the official OpenDataSUS dataset for routine vaccination doses applied and 
 
 ## Acceptance criteria
 
-- [ ] `sources.md` contains URL, licence, format, size per month, encoding, columns and known caveats
-- [ ] Event-time and processing-time columns identified
+- [x] `sources.md` contains URL, licence, format, size per month, encoding, columns and known caveats
+- [x] Event-time and processing-time columns identified
 
 ## Deliverables
 
 - `docs/data/sources.md`
-- `notebooks/01_source_exploration.ipynb`
+- `scripts/discovery/remote_zip_sample.py` (HTTP Range sampler)
+- `scripts/discovery/profile_sample.py` (format, columns, lag)
 
 ## Why this matters (best practice)
 
@@ -36,4 +37,8 @@ Most pipeline bugs come from wrong assumptions about the source (encoding, delim
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- The portal moved to `dadosabertos.saude.gov.br` (Next.js); the old CKAN API is gone. Dataset metadata and resource URLs were read from the page's embedded JSON.
+- **No full download was needed.** The files are ZIPs on S3, which accepts HTTP `Range` requests, so reading the ZIP directory plus the first ~8 MB gave the header, the encoding and 50 000 sample rows. Exact row counts come later from the downloader's manifest (F03-T01). This replaced the planned notebook with two reusable scripts.
+- Sizes are larger than assumed in ADR-0003 (1.5-3.1 GB zipped, 6-12 GB of CSV per month); a note was added to the ADR.
+- Key findings: Latin-1 + `;`; 56 columns stable from 2024 to 2026; the PDF dictionary does not match the CSV (8 renamed, 4 missing fields); `co_troca_documento` gives the source **update semantics**; registration lag median **31 days** (p90 58, max 583); past months are re-published.
+- Risk raised: drive C: has 12 GB free and holds the WSL virtual disk; moving the distribution to D: is documented in `docs/setup.md` §1.7. **Resolved on 2026-11-25:** `ext4.vhdx` moved to `D:\WSL\Ubuntu-24.04` (321 GB free); the 25 tests and the smoke test pass after the move.

@@ -115,6 +115,17 @@ class SparkConfig(BaseModel):
         return value.lower()
 
 
+class PrivacyConfig(BaseModel):
+    """Disclosure control for published outputs (docs/data/privacy_assessment.md, rule P6)."""
+
+    suppression_threshold: int = Field(
+        default=5,
+        ge=3,
+        description="Counts below this value (and coverages whose numerator or complement is "
+        "below it) are suppressed in gold outputs and the dashboard.",
+    )
+
+
 class LoggingConfig(BaseModel):
     level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     json_format: bool = True
@@ -174,6 +185,7 @@ class Settings(BaseSettings):
     scope: ScopeConfig
     paths: PathsConfig = PathsConfig()
     spark: SparkConfig = SparkConfig()
+    privacy: PrivacyConfig = PrivacyConfig()
     logging: LoggingConfig = LoggingConfig()
 
     @classmethod

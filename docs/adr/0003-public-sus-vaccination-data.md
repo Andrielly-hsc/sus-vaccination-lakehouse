@@ -25,3 +25,7 @@ The SI-PNI "doses applied" open data (OpenDataSUS) offers individual, anonymised
 - − Sensitive domain (health data): requires a privacy assessment, minimisation and small-cell suppression (F02-T06)
 - − External availability risk: URLs and columns may change; discovery is documented (F02-T01)
 - − Project 4 of the portfolio (predictive maintenance) assumed the hydraulic dataset; its scope must be revisited before it starts
+
+## Notes
+
+- 2026-11-25 (F02-T01): measured sizes are larger than the "1.4 GB" assumed above: 1.5 to 3.1 GB per zipped month (6 to 12 GB of CSV, 10 to 21 M rows), and past months are re-published. The decision stands; the consequences are handled by filtering while streaming and by revision-aware ingestion ([sources.md](../data/sources.md)).

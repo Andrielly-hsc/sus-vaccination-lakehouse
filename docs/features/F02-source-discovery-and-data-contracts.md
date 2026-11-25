@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | To Do |
+| **Status** | In Review |
 | **Priority** | Must (MoSCoW) |
 | **Depends on** | [F01](F01-project-setup.md) |
 | **Estimate** | 16 h |
@@ -34,21 +34,21 @@ Understand the public sources precisely and write machine-readable data contract
 
 ## Acceptance criteria
 
-- [ ] `docs/data/sources.md` lists every source with URL, licence, format and caveats
-- [ ] Every table in ARCHITECTURE §5.2 has a contract in `contracts/`
-- [ ] Spark schemas in code come only from contracts (no hand-written `StructType` for these tables)
-- [ ] CI fails when a contract change is breaking without a major version bump
+- [x] `docs/data/sources.md` lists every source with URL, licence, format and caveats
+- [x] Every table in ARCHITECTURE §5.2 has a contract in `contracts/` (event stream: F04-T01)
+- [x] Spark schemas in code come only from contracts (no hand-written `StructType` for these tables)
+- [x] CI fails when a contract change is breaking without a major version bump
 
 ## Tasks
 
 | ID | Task | Estimate | Status |
 |---|---|---|---|
-| [F02-T01](../tasks/F02-T01-source-discovery.md) | Discover and document the SI-PNI source | 3 h | To Do |
-| [F02-T02](../tasks/F02-T02-data-dictionary.md) | Write the data dictionary | 3 h | To Do |
-| [F02-T03](../tasks/F02-T03-reference-data-sources.md) | Identify reference data and PNI targets | 2 h | To Do |
-| [F02-T04](../tasks/F02-T04-data-contracts-odcs.md) | Write ODCS contracts for all tables | 3 h | To Do |
-| [F02-T05](../tasks/F02-T05-contract-loader-and-schema-generation.md) | Generate Spark schemas from contracts | 3 h | To Do |
-| [F02-T06](../tasks/F02-T06-privacy-assessment.md) | LGPD privacy assessment | 2 h | To Do |
+| [F02-T01](../tasks/F02-T01-source-discovery.md) | Discover and document the SI-PNI source | 3 h | In Review |
+| [F02-T02](../tasks/F02-T02-data-dictionary.md) | Write the data dictionary | 3 h | In Review |
+| [F02-T03](../tasks/F02-T03-reference-data-sources.md) | Identify reference data and PNI targets | 2 h | In Review |
+| [F02-T04](../tasks/F02-T04-data-contracts-odcs.md) | Write ODCS contracts for all tables | 3 h | In Review |
+| [F02-T05](../tasks/F02-T05-contract-loader-and-schema-generation.md) | Generate Spark schemas from contracts | 3 h | In Review |
+| [F02-T06](../tasks/F02-T06-privacy-assessment.md) | LGPD privacy assessment | 2 h | In Review |
 
 ## Syllabus topics covered
 

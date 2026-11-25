@@ -1,0 +1,327 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-gold-indicators
+name: Gold accountability indicators
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: 'PNI-style indicators per municipality: coverage vs target, dropout, homogeneity and registration
+    timeliness.'
+  usage: Accountability dashboard and report; reconciled with the official panel (F06-T06).
+  limitations: Small counts are suppressed (is_suppressed). Targets come from a secondary source (seeds/README.md).
+    Age is in whole years, so age limits in months are approximated.
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/gold/
+  format: delta
+  environment: dev
+schema:
+- name: ind_coverage_yearly
+  physicalName: gold.ind_coverage_yearly
+  physicalType: table
+  description: Vaccination coverage per municipality, indicator and year (NT 90/2025-DPNI method).
+  dataGranularityDescription: Year x residence municipality x indicator.
+  properties:
+  - name: year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Vaccination year.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: municipality_code_6
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Residence municipality.
+    primaryKey: true
+    primaryKeyPosition: 2
+  - name: indicator_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: seeds/coverage_indicators.csv.
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: vaccinated_stage1
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Individuals with enough doses, respecting age and interval.
+  - name: vaccinated_stage2
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Individuals added by the last dose 'dose type'.
+  - name: vaccinated_total
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: stage1 + stage2, each person once.
+  - name: target_population
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: SINASC live births (denominator).
+  - name: denominator_year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: SINASC year used (previous year while current is not consolidated).
+  - name: coverage_pct
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: vaccinated_total / target_population x 100; may exceed 100.
+  - name: target_pct
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: operational
+    description: Target from the seed.
+  - name: meets_target
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: aggregate
+    description: coverage_pct >= target_pct.
+  - name: stage2_share_pct
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: 'Share of stage-2 individuals: data-quality indicator (lower is better).'
+  - &id001
+    name: is_suppressed
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: aggregate
+    description: True when a count is below the small-cell threshold (default 5); values are then hidden
+      in published outputs.
+  - name: is_provisional
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: aggregate
+    description: Year not closed or denominator preliminary.
+  - name: _updated_at
+    logicalType: timestamp
+    physicalType: timestamp
+    required: true
+    classification: technical
+    description: Build time.
+  quality:
+  - name: coverage_non_negative
+    type: sql
+    query: SELECT COUNT(*) FROM ${object} WHERE coverage_pct < 0 OR vaccinated_total <> vaccinated_stage1
+      + vaccinated_stage2
+    mustBe: 0
+    dimension: consistency
+    severity: error
+    description: Coverage is non-negative and stages add up.
+- name: ind_dropout_yearly
+  physicalName: gold.ind_dropout_yearly
+  physicalType: table
+  description: Dropout between first and last dose of multi-dose schedules.
+  dataGranularityDescription: Year x residence municipality x vaccine schedule.
+  properties:
+  - name: year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Year.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: municipality_code_6
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Residence municipality.
+    primaryKey: true
+    primaryKeyPosition: 2
+  - name: indicator_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Multi-dose indicator (e.g. penta_d3).
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: first_doses
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: D1 applied.
+  - name: last_doses
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Last dose of the schedule applied.
+  - name: dropout_pct
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: (first - last) / first x 100.
+  - name: dropout_class
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: low < 5 %, medium 5-10 %, high >= 10 %.
+    enum:
+    - value: low
+    - value: medium
+    - value: high
+  - *id001
+- name: ind_homogeneity_yearly
+  physicalName: gold.ind_homogeneity_yearly
+  physicalType: table
+  description: Share of municipalities in a UF that reach the target.
+  dataGranularityDescription: Year x UF x indicator.
+  properties:
+  - name: year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Year.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: uf
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: UF.
+    primaryKey: true
+    primaryKeyPosition: 2
+  - name: indicator_id
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Indicator.
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: municipalities_total
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Municipalities with data.
+  - name: municipalities_meeting_target
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: aggregate
+    description: Of which meet the target.
+  - name: homogeneity_pct
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: Share meeting the target.
+- name: ind_timeliness_monthly
+  physicalName: gold.ind_timeliness_monthly
+  physicalType: table
+  description: Registration timeliness per municipality or facility and month.
+  dataGranularityDescription: Month x level (municipality | establishment) x code.
+  properties:
+  - name: year_month
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: YYYY-MM of vaccination.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: entity_level
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: municipality or establishment.
+    primaryKey: true
+    primaryKeyPosition: 2
+    enum:
+    - value: municipality
+    - value: establishment
+  - name: entity_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: aggregate
+    description: Municipality code or CNES.
+    primaryKey: true
+    primaryKeyPosition: 3
+  - name: doses
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: aggregate
+    description: Doses considered (transcriptions excluded).
+  - name: lag_p50_days
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: Median registration lag.
+  - name: lag_p90_days
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: 90th percentile lag.
+  - name: pct_within_7d
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: Share registered within 7 days.
+  - name: pct_within_30d
+    logicalType: number
+    physicalType: double
+    required: true
+    classification: aggregate
+    description: Share registered within 30 days.
+  - *id001
+slaProperties:
+- property: frequency
+  value: 1
+  unit: month
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- gold
+- indicators
+customProperties:
+- property: layer
+  value: gold
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

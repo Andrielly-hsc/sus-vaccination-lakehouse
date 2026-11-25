@@ -73,6 +73,16 @@ jobs:
           pip install -r requirements-lock.txt
           pip install -e . --no-deps
 
+      # Contracts are validated against the ODCS JSON Schema by pytest; this step checks that a
+      # breaking change in a contract comes with the required version bump (contracts/README.md).
+      - name: Check data-contract versions against the base branch
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_REF"
+          python scripts/check_contract_compat.py --base "origin/$BASE_REF"
+
       - name: Run tests with coverage
         run: pytest --cov-report=xml
 

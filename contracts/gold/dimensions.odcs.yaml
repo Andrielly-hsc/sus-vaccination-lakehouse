@@ -1,0 +1,284 @@
+# Generated once by a scaffolding script (F02-T04); edit by hand from now on.
+apiVersion: v3.2.0
+kind: DataContract
+id: vaxlake-gold-dimensions
+name: Gold conformed dimensions
+version: 0.1.0
+status: proposed
+domain: public-health-immunisation
+dataProduct: sus-vaccination-lakehouse
+description:
+  purpose: Shared dimensions of the star schema, so every fact and indicator uses the same municipalities,
+    vaccines, doses and dates.
+  usage: Join keys of gold facts and indicators; filters of the dashboard.
+  limitations: Natural keys for stable code lists (municipality, vaccine, dose, date); surrogate key for
+    the versioned establishment.
+servers:
+- server: lakehouse-local
+  type: local
+  path: data/lakehouse/gold/
+  format: delta
+  environment: dev
+schema:
+- name: dim_municipality
+  physicalName: gold.dim_municipality
+  physicalType: table
+  description: Conformed municipality dimension (IBGE).
+  dataGranularityDescription: One row per municipality.
+  properties:
+  - name: municipality_code_6
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: DATASUS 6-digit code (join key of the facts).
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: municipality_code_7
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: IBGE 7-digit code.
+  - name: municipality_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Name.
+  - name: uf
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF acronym.
+  - name: uf_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: UF name.
+  - name: region
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region acronym.
+  - name: region_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Region name.
+  - name: ibge_vintage
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: Download date of the IBGE list used.
+  quality:
+  - name: unique_municipality_code_6
+    type: library
+    metric: duplicateValues
+    arguments:
+      properties:
+      - municipality_code_6
+    mustBe: 0
+    dimension: uniqueness
+    severity: error
+    description: (municipality_code_6) identifies one row.
+- name: dim_vaccine
+  physicalName: gold.dim_vaccine
+  physicalType: table
+  description: Vaccines, sera, immunoglobulins and monoclonal antibodies.
+  dataGranularityDescription: One row per vaccine code.
+  properties:
+  - name: vaccine_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: SI-PNI vaccine code.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: vaccine_acronym
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Acronym.
+  - name: vaccine_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Full name.
+  - name: product_type
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: vaccine, serum, immunoglobulin, monoclonal_antibody.
+  - name: indicator_ids
+    logicalType: array
+    physicalType: array<string>
+    required: true
+    classification: operational
+    description: Coverage indicators this vaccine counts for.
+    items:
+      logicalType: string
+- name: dim_dose
+  physicalName: gold.dim_dose
+  physicalType: table
+  description: Dose codes with their kind and number.
+  dataGranularityDescription: One row per dose code.
+  properties:
+  - name: dose_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: SI-PNI dose code.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: dose_name
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: Description.
+  - name: dose_kind
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: primary, single, booster, revaccination, zero, initial, additional, treatment, unspecified.
+  - name: dose_number
+    logicalType: integer
+    physicalType: int
+    required: false
+    classification: operational
+    description: Ordinal when applicable.
+- name: dim_date
+  physicalName: gold.dim_date
+  physicalType: table
+  description: Calendar dimension.
+  dataGranularityDescription: One row per day from 2020-01-01.
+  properties:
+  - name: date
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: operational
+    description: Calendar day.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: year
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: Year.
+  - name: month
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: Month.
+  - name: year_month
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: operational
+    description: YYYY-MM.
+  - name: iso_week
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: ISO week.
+  - name: day_of_week
+    logicalType: integer
+    physicalType: int
+    required: true
+    classification: operational
+    description: 1 = Monday.
+  - name: is_weekend
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: operational
+    description: Saturday or Sunday.
+- name: dim_establishment
+  physicalName: gold.dim_establishment
+  physicalType: table
+  description: Facilities with history (from silver SCD2).
+  dataGranularityDescription: One row per facility version.
+  properties:
+  - name: establishment_sk
+    logicalType: integer
+    physicalType: bigint
+    required: true
+    classification: technical
+    description: Surrogate key from silver.
+    primaryKey: true
+    primaryKeyPosition: 1
+  - name: establishment_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: CNES.
+  - name: establishment_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Trade name.
+  - name: establishment_type_name
+    logicalType: string
+    physicalType: string
+    required: false
+    classification: org
+    description: Facility type.
+  - name: facility_municipality_code
+    logicalType: string
+    physicalType: string
+    required: true
+    classification: org
+    description: Municipality.
+  - name: valid_from
+    logicalType: date
+    physicalType: date
+    required: true
+    classification: technical
+    description: Start of validity.
+  - name: valid_to
+    logicalType: date
+    physicalType: date
+    required: false
+    classification: technical
+    description: End of validity.
+  - name: is_current
+    logicalType: boolean
+    physicalType: boolean
+    required: true
+    classification: technical
+    description: Current version.
+team:
+  name: vaxlake
+  description: Portfolio project team (single maintainer).
+  members:
+  - username: Andrielly-hsc
+    role: Data product owner and data engineer
+support:
+- channel: github-issues
+  url: https://github.com/Andrielly-hsc/sus-vaccination-lakehouse/issues
+  description: Report contract violations and questions as GitHub issues.
+tags:
+- gold
+- star-schema
+customProperties:
+- property: layer
+  value: gold
+contractCreatedTs: '2026-11-25T00:00:00-03:00'

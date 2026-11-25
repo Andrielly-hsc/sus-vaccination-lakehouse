@@ -68,7 +68,7 @@ directly to sensor data on Microsoft Fabric, Databricks or Azure IoT.
 ### 1.4 Constraints
 
 - **Public, anonymised data only** (OpenDataSUS). No attempt at re-identification. See [ADR-0003](adr/0003-public-sus-vaccination-data.md).
-- National monthly files are ~1.4 GB each, so the default scope is **one region (Southeast: SP, MG, RJ, ES) and 24 months**, configurable. The scope is deliberately skewed (São Paulo ≫ Espírito Santo) to study partition skew.
+- National monthly files are 1.5–3.1 GB zipped (6–12 GB of CSV, 10–21 M rows; [sources](data/sources.md)), so the default scope is **one region (Southeast: SP, MG, RJ, ES) and 24 months**, configurable. The scope is deliberately skewed (São Paulo ≫ Espírito Santo) to study partition skew.
 - Spark needs Java 17 and a Linux environment: development runs in **WSL2 Ubuntu** on an 8 GB laptop (WSL capped at 5 GB); visitors can use **GitHub Codespaces** through the dev container; see [ADR-0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md).
 - Python 3.11. All code, docs and table/column names in **English**; Portuguese source names are mapped in the data contract.
 
@@ -182,7 +182,7 @@ simulation assumption and never affects the daily/yearly indicators.
 | Table format | **Delta Lake** (`delta-spark`, version matched to Spark) | Adds ACID transactions, MERGE, time travel, schema enforcement and Change Data Feed on top of Parquet. Native format of Fabric OneLake and Databricks. | [0002](adr/0002-delta-lake-medallion-on-pyspark.md) |
 | File format | **Parquet** (inside Delta), CSV/JSON in landing | Columnar, compressed, statistics per file for data skipping. | — |
 | Streaming | **Spark Structured Streaming** (file source, Delta source/sink) | Same DataFrame API for batch and stream; exactly-once with checkpoints + idempotent sinks. Kafka optional. | [0004](adr/0004-file-based-streaming-simulation.md) |
-| Data contracts | **Open Data Contract Standard (ODCS) v3** YAML | Vendor-neutral standard (Linux Foundation / Bitol) for schema, quality rules, SLAs and ownership. | [0006](adr/0006-odcs-data-contracts.md) |
+| Data contracts | **Open Data Contract Standard (ODCS) v3.2.0** YAML, validated against the official JSON Schema | Vendor-neutral standard (Linux Foundation / Bitol) for schema, quality rules, SLAs and ownership. | [0006](adr/0006-odcs-data-contracts.md) |
 | Data quality | **Great Expectations (GX Core 1.x)** on Spark DataFrames | Most widely adopted open-source DQ framework; expectations double as documentation (Data Docs). Soda is the main alternative. | [0005](adr/0005-great-expectations-for-data-quality.md) |
 | Lineage | **OpenLineage** Spark listener | Open standard for lineage events, consumed by Marquez, DataHub, Microsoft Purview, Unity Catalog. | [0008](adr/0008-openlineage-for-lineage.md) |
 | Catalog | Spark SQL catalog (local Hive-compatible metastore) + catalog docs generated from contracts | Same `database.table` model as Unity Catalog / Fabric; "catalog as code". | [0008](adr/0008-openlineage-for-lineage.md) |
@@ -262,10 +262,10 @@ sus-vaccination-lakehouse/
 
 | Source | Content | Grain | Frequency | Use |
 |---|---|---|---|---|
-| **SI-PNI doses applied** (OpenDataSUS) | Anonymised individual vaccination records, ~47 columns | One dose | Monthly files, national | Facts |
+| **SI-PNI doses applied** (OpenDataSUS) | Anonymised individual vaccination records, 56 columns, Latin-1 `;` CSV in monthly ZIPs; past months are re-published | One dose | Monthly files, national | Facts |
 | **IBGE municipalities** | Municipality code (7 digits), name, UF, region | Municipality | Yearly | Dimension, code conformance |
-| **SINASC live births** (DATASUS/OpenDataSUS) | Live births by municipality of residence | Municipality × year | Yearly | Coverage denominator (children < 1 and 1 year old) |
-| **PNI targets** (seed file from PNI technical notes) | Target coverage per vaccine (e.g. BCG 90 %, others 95 %) and which dose completes the schedule | Vaccine | Rarely changes | Indicator thresholds |
+| **SINASC live births** (OpenDataSUS) | Live births by municipality of residence; microdata aggregated to counts at ingestion | Municipality × year | Yearly (current year preliminary) | Coverage denominator (children < 1 and 1 year old) |
+| **Coverage indicators, vaccines, doses** (seeds, [`seeds/README.md`](../seeds/README.md)) | Per indicator: vaccines that count, doses required, target age, minimum interval, target (BCG/rotavirus 90 %, others 95 %); vaccine and dose code tables | Indicator / code | Rarely changes | Indicator rules and thresholds |
 
 Exact URLs, file names, encoding and columns are confirmed in
 [F02-T01](tasks/F02-T01-source-discovery.md) and documented in
@@ -330,7 +330,7 @@ erDiagram
 
 | Indicator | Formula | Notes |
 |---|---|---|
-| **Vaccination coverage** | doses completing the schedule in the target age group ÷ target population × 100 | Denominator for < 1 and 1-year-olds = SINASC live births. Counted by municipality of **residence**. Can exceed 100 % (denominator errors, people vaccinated outside their municipality) — reported, not capped. |
+| **Vaccination coverage** | **individuals** who completed the schedule in the target age group ÷ target population × 100 | Official method since 2024 (NT 90/2025-DPNI): stage 1 = enough doses respecting age and minimum interval; stage 2 = last dose by "dose type"; each person once (needs `patient_key`). Denominator for < 1 and 1-year-olds = SINASC live births. Counted by municipality of **residence**. Can exceed 100 % — reported, not capped. The share of stage-2 people is reported as a data-quality indicator. |
 | **Dropout rate** | (first doses − last doses) ÷ first doses × 100 | Class: low < 5 %, medium 5–10 %, high ≥ 10 %. |
 | **Homogeneity** | % of municipalities (in a UF) that reach the target for a vaccine | Equity view of coverage. |
 | **Registration timeliness** | `registered_at − vaccination_date` in days | p50, p90 and % within 7/30 days, per municipality and facility. |
@@ -341,7 +341,7 @@ the Ministry's official panel in F06-T06.
 
 ### 5.5 Identity, keys and conformance
 
-- **Business key** of a dose: the source document/record identifier (`dose_id`). Duplicates are resolved by keeping the most recently registered version.
+- **Business key** of a dose: the RNDS document identifier `co_documento` → `dose_id`. Duplicates are resolved by keeping the most recently registered version, and a document that **replaces** another (`co_troca_documento`) retires the replaced one — the source has update semantics, not only inserts.
 - **Surrogate keys** in gold dimensions (`*_sk`, `xxhash64` of the natural key + validity start) — deterministic, so rebuilds produce the same keys.
 - **Municipality codes:** DATASUS uses 6 digits, IBGE 7 (the 7th is a check digit). Silver stores **both** (`municipality_code_6`, `municipality_code_7`) and joins always use the 6-digit form. This is one of the most common errors in Brazilian health data.
 
@@ -423,7 +423,7 @@ silver_df = (
 
 ### 6.5 Data contracts (ODCS)
 
-- One contract per table and per source in `contracts/`, ODCS v3 YAML: schema (name, type, nullability, description, source column), primary key, quality rules, freshness SLA, owner, classification (`sensitive` columns flagged).
+- One contract per table and per source in `contracts/` ([conventions](../contracts/README.md)), ODCS v3.2.0 YAML: schema (name, type, nullability, description, source column via `transformSourceObjects`), primary key, quality rules, freshness SLA, owner, privacy classification. `scripts/validate_contracts.py` checks them against the official JSON Schema in every test run.
 - The contract is the **single source of truth**: Spark schemas, GX expectations, table/column comments and catalog docs are **generated** from it. No schema is written twice.
 - **Semantic versioning:** removing/renaming/retyping a column = *major* (breaking); adding a nullable column = *minor*; descriptions = *patch*. CI fails a breaking change without a major bump.
 - Bronze contract mirrors the source; silver/gold contracts describe what consumers can rely on.
@@ -458,10 +458,10 @@ Quality is checked at every layer ("defence in depth"):
 - Tables are registered in the Spark catalog as `bronze.*`, `silver.*`, `gold.*`, `ops.*` with table and column **comments generated from contracts**.
 - **OpenLineage** emits a lineage event for each Spark job (inputs, outputs, column lineage); `docs/lineage.md` is generated from those events. Marquez can display them (optional).
 - **Delta history** is the audit trail; `docs/data/data_card.md` documents provenance, intended use, limitations and ownership.
-- **LGPD** (Lei 13.709/2018): health data is *sensitive personal data* (art. 5, II and art. 11). The source is anonymised, but combinations (birth date + sex + small municipality) can raise re-identification risk, so:
-  - **minimisation** — silver drops fields the indicators do not need (e.g. exact birth date → age in months; patient hash not propagated to gold);
-  - **small-cell suppression** — gold/dashboard counts below a threshold (default 5) are suppressed;
-  - no joins with other data aimed at identifying people.
+- **LGPD** (Lei 13.709/2018): health data is *sensitive personal data* (art. 5, II and art. 11). The source is called anonymised, but it has a stable pseudonymous patient code and quasi-identifiers: in the samples, *municipality + date + age + sex* makes 69 % of records unique. The [privacy assessment](data/privacy_assessment.md) defines rules P1–P11, mainly:
+  - **minimisation** — silver keeps 35 of 56 columns; all sensitive columns and the CEP prefix are dropped; `patient_key` stays in silver (the official coverage method needs it) and never reaches gold;
+  - **small-cell suppression** — published counts below *k* = 5 (`privacy.suppression_threshold`), and coverages whose numerator or complement is below *k*, are suppressed;
+  - no record-level data outside the lakehouse, and no joins with other data aimed at identifying people.
 
 ### 6.9 Git workflow
 
