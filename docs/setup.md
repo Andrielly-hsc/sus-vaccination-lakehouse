@@ -81,7 +81,21 @@ From Windows, the Linux files are visible in Explorer at `\\wsl$\Ubuntu-24.04\ho
 - If Windows becomes slow during a heavy run, lower `spark.driver.memory`
   (`VAXLAKE_SPARK__DRIVER_MEMORY=2g`) or close other applications.
 
-### 1.7 Common problems
+### 1.7 Disk space: keep WSL on a large drive
+
+WSL stores each distribution in a virtual disk (`ext4.vhdx`), by default on drive **C:**. The
+Southeast scope needs tens of GB ([sources §1.8](data/sources.md#18-volume-estimates-for-this-project)),
+so if C: is small, move the distribution once to a larger drive (WSL 2.3 or newer). In PowerShell:
+
+```powershell
+wsl --shutdown
+wsl --manage Ubuntu-24.04 --move D:\WSL\Ubuntu-24.04
+```
+
+Nothing changes inside Ubuntu: same user, files, venv and `~/vaxlake-data`. Check the free space
+from Ubuntu with `df -h ~`.
+
+### 1.8 Common problems
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -93,6 +107,7 @@ From Windows, the Linux files are visible in Explorer at `\\wsl$\Ubuntu-24.04\ho
 | `JAVA_HOME is not set` | New terminal did not load `~/.bashrc` | `source ~/.bashrc`, or re-run the setup script |
 | Pipeline very slow | Data on `/mnt/d` instead of `~/vaxlake-data` | Check `echo $VAXLAKE_PATHS__DATA_DIR` |
 | Tests skipped with "Java 17 not found" | Running pytest from Windows instead of Ubuntu | Run it in Ubuntu |
+| `No space left on device` | The WSL virtual disk lives on a full drive | Move the distribution (§1.7) |
 
 ---
 

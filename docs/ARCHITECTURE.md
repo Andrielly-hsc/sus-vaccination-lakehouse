@@ -68,7 +68,7 @@ directly to sensor data on Microsoft Fabric, Databricks or Azure IoT.
 ### 1.4 Constraints
 
 - **Public, anonymised data only** (OpenDataSUS). No attempt at re-identification. See [ADR-0003](adr/0003-public-sus-vaccination-data.md).
-- National monthly files are ~1.4 GB each, so the default scope is **one region (Southeast: SP, MG, RJ, ES) and 24 months**, configurable. The scope is deliberately skewed (São Paulo ≫ Espírito Santo) to study partition skew.
+- National monthly files are 1.5–3.1 GB zipped (6–12 GB of CSV, 10–21 M rows; [sources](data/sources.md)), so the default scope is **one region (Southeast: SP, MG, RJ, ES) and 24 months**, configurable. The scope is deliberately skewed (São Paulo ≫ Espírito Santo) to study partition skew.
 - Spark needs Java 17 and a Linux environment: development runs in **WSL2 Ubuntu** on an 8 GB laptop (WSL capped at 5 GB); visitors can use **GitHub Codespaces** through the dev container; see [ADR-0010](adr/0010-wsl2-for-development-dev-container-for-visitors.md).
 - Python 3.11. All code, docs and table/column names in **English**; Portuguese source names are mapped in the data contract.
 
@@ -262,7 +262,7 @@ sus-vaccination-lakehouse/
 
 | Source | Content | Grain | Frequency | Use |
 |---|---|---|---|---|
-| **SI-PNI doses applied** (OpenDataSUS) | Anonymised individual vaccination records, ~47 columns | One dose | Monthly files, national | Facts |
+| **SI-PNI doses applied** (OpenDataSUS) | Anonymised individual vaccination records, 56 columns, Latin-1 `;` CSV in monthly ZIPs; past months are re-published | One dose | Monthly files, national | Facts |
 | **IBGE municipalities** | Municipality code (7 digits), name, UF, region | Municipality | Yearly | Dimension, code conformance |
 | **SINASC live births** (DATASUS/OpenDataSUS) | Live births by municipality of residence | Municipality × year | Yearly | Coverage denominator (children < 1 and 1 year old) |
 | **PNI targets** (seed file from PNI technical notes) | Target coverage per vaccine (e.g. BCG 90 %, others 95 %) and which dose completes the schedule | Vaccine | Rarely changes | Indicator thresholds |
@@ -341,7 +341,7 @@ the Ministry's official panel in F06-T06.
 
 ### 5.5 Identity, keys and conformance
 
-- **Business key** of a dose: the source document/record identifier (`dose_id`). Duplicates are resolved by keeping the most recently registered version.
+- **Business key** of a dose: the RNDS document identifier `co_documento` → `dose_id`. Duplicates are resolved by keeping the most recently registered version, and a document that **replaces** another (`co_troca_documento`) retires the replaced one — the source has update semantics, not only inserts.
 - **Surrogate keys** in gold dimensions (`*_sk`, `xxhash64` of the natural key + validity start) — deterministic, so rebuilds produce the same keys.
 - **Municipality codes:** DATASUS uses 6 digits, IBGE 7 (the 7th is a check digit). Silver stores **both** (`municipality_code_6`, `municipality_code_7`) and joins always use the 6-digit form. This is one of the most common errors in Brazilian health data.
 
