@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | In Review |
+| **Status** | Done |
 | **Estimate** | 3 h |
 | **Depends on** | [F01-T01](F01-T01-initialize-repository.md) |
 | **Branch** | `feat/F01-T02-codespaces-dev-environment`, then `feat/F01-T02-wsl2-dev-environment` |

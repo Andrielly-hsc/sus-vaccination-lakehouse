@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | In Review |
+| **Status** | Done |
 | **Priority** | Must (MoSCoW) |
 | **Depends on** | — |
 | **Estimate** | 12 h |
@@ -35,21 +35,21 @@ A reproducible Linux-based Spark + Delta development environment, packaging, qua
 
 ## Acceptance criteria
 
-- [ ] `pytest` runs a Spark + Delta smoke test green in WSL2 and in CI
-- [ ] A fresh clone reaches a green test run by following `docs/setup.md` only (WSL2 or Codespaces)
-- [ ] `pre-commit run --all-files` passes
+- [x] `pytest` runs a Spark + Delta smoke test green in WSL2 and in CI
+- [x] A fresh clone reaches a green test run by following `docs/setup.md` only (WSL2 or Codespaces)
+- [x] `pre-commit run --all-files` passes
 
 ## Tasks
 
 | ID | Task | Estimate | Status |
 |---|---|---|---|
-| [F01-T01](../tasks/F01-T01-initialize-repository.md) | Initialise repository conventions | 1 h | In Review |
-| [F01-T02](../tasks/F01-T02-dev-environment.md) | Set up WSL2 and the dev container | 3 h | In Review |
-| [F01-T03](../tasks/F01-T03-python-packaging.md) | Package the project and pin Spark/Delta | 1.5 h | In Review |
-| [F01-T04](../tasks/F01-T04-code-quality-tooling.md) | Configure ruff and pre-commit | 1 h | In Review |
-| [F01-T05](../tasks/F01-T05-spark-session-and-config.md) | SparkSession factory, config profiles and logging | 2 h | In Review |
-| [F01-T06](../tasks/F01-T06-test-scaffolding.md) | Test scaffolding with a shared Spark fixture | 1.5 h | In Review |
-| [F01-T07](../tasks/F01-T07-ci-pipeline.md) | GitHub Actions CI with Java 17 | 2 h | In Review |
+| [F01-T01](../tasks/F01-T01-initialize-repository.md) | Initialise repository conventions | 1 h | Done |
+| [F01-T02](../tasks/F01-T02-dev-environment.md) | Set up WSL2 and the dev container | 3 h | Done |
+| [F01-T03](../tasks/F01-T03-python-packaging.md) | Package the project and pin Spark/Delta | 1.5 h | Done |
+| [F01-T04](../tasks/F01-T04-code-quality-tooling.md) | Configure ruff and pre-commit | 1 h | Done |
+| [F01-T05](../tasks/F01-T05-spark-session-and-config.md) | SparkSession factory, config profiles and logging | 2 h | Done |
+| [F01-T06](../tasks/F01-T06-test-scaffolding.md) | Test scaffolding with a shared Spark fixture | 1.5 h | Done |
+| [F01-T07](../tasks/F01-T07-ci-pipeline.md) | GitHub Actions CI with Java 17 | 2 h | Done |
 
 ## Syllabus topics covered
 

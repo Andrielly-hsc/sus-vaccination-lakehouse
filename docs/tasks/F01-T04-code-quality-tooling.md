@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F01 — Project setup & engineering standards](../features/F01-project-setup.md) |
-| **Status** | In Review |
+| **Status** | Done |
 | **Estimate** | 1 h |
 | **Depends on** | [F01-T03](F01-T03-python-packaging.md) |
 | **Branch** | `feat/F01-T04-code-quality-tooling` |
