@@ -377,14 +377,13 @@ the Ministry's official panel in F06-T06.
 def standardise_municipality(df: DataFrame) -> DataFrame:
     """Normalise residence municipality to 6-digit DATASUS + 7-digit IBGE codes."""
     code = F.regexp_replace(F.col("residence_municipality_raw"), r"\D", "")
-    return (
-        df.withColumn("municipality_code_6", F.substring(code, 1, 6))
-          .withColumn("is_municipality_code_valid", F.length(code).isin(6, 7))
+    return df.withColumn("municipality_code_6", F.substring(code, 1, 6)).withColumn(
+        "is_municipality_code_valid", F.length(code).isin(6, 7)
     )
 
+
 silver_df = (
-    bronze_df
-    .transform(rename_to_english)
+    bronze_df.transform(rename_to_english)
     .transform(cast_types)
     .transform(standardise_municipality)
     .transform(add_registration_lag)
