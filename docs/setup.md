@@ -85,7 +85,9 @@ From Windows, the Linux files are visible in Explorer at `\\wsl$\Ubuntu-24.04\ho
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `wsl --install` says virtualisation is disabled | Virtualisation off in BIOS/UEFI | Enable *Intel VT-x / AMD-V* in the BIOS, retry |
+| `wsl --status`: "WSL2 cannot start because virtualisation is not enabled" | The Windows component *Virtual Machine Platform* is off (or virtualisation is off in BIOS/UEFI) | Admin PowerShell: `wsl --install --no-distribution`, restart; if it persists, enable *Intel VT-x / AMD-V* in the BIOS |
+| `sudo` asks for the password of a different user | You are in an **older distribution** (e.g. Ubuntu 20.04 on WSL1), not the new one | `wsl -l -v` lists them; open the new one with `wsl -d Ubuntu-24.04`. The setup script refuses to run elsewhere |
+| Forgot the Linux password | — | Admin not needed: `wsl -d <distro> -u root passwd <user>` and type a new one |
 | `java.lang.OutOfMemoryError` / Ubuntu freezes | Driver memory too high for the WSL cap, or `collect()`/`toPandas()` on a large DataFrame | Keep driver memory ≤ 3g with `memory=5GB`; aggregate before collecting |
 | First Spark start is slow | Delta JARs downloaded to `~/.ivy2.5.2` | Wait once; later starts are fast |
 | `JAVA_HOME is not set` | New terminal did not load `~/.bashrc` | `source ~/.bashrc`, or re-run the setup script |

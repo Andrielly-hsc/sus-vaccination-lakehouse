@@ -13,7 +13,20 @@ VENV="${VAXLAKE_VENV:-$HOME/.venvs/vaxlake}"          # Linux filesystem: fast
 DATA_DIR="${VAXLAKE_DATA_DIR:-$HOME/vaxlake-data}"    # Linux filesystem: fast
 BASHRC="$HOME/.bashrc"
 
-echo "==> System packages: Java 17 and Python 3.11 (asks for your Linux password)"
+# Guard: run only in the intended environment (WSL2 + Ubuntu 24.04), before touching anything.
+if ! grep -qi "microsoft" /proc/version || grep -qi "Microsoft@Microsoft.com" /proc/version; then
+    # WSL1 kernels report "Microsoft@Microsoft.com"; WSL2 kernels report "microsoft-standard-WSL2".
+    echo "This is not a WSL2 distribution. Install Ubuntu 24.04 on WSL2 (docs/setup.md, section 1)" >&2
+    echo "and open it with: wsl -d Ubuntu-24.04" >&2
+    exit 1
+fi
+. /etc/os-release
+if [[ "${VERSION_ID:-}" != "24.04" ]]; then
+    echo "Expected Ubuntu 24.04, found ${PRETTY_NAME:-unknown}. Open the right one with: wsl -d Ubuntu-24.04" >&2
+    exit 1
+fi
+
+echo "==> System packages: Java 17 and Python 3.11 (sudo asks for the password of Linux user '$USER')"
 sudo apt-get update -qq
 sudo apt-get install -y -qq software-properties-common
 if ! apt-cache show python3.11 >/dev/null 2>&1; then
