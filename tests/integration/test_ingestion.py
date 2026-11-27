@@ -177,7 +177,7 @@ def test_crash_after_delta_commit_does_not_duplicate_on_restart(
     monkeypatch.setattr(bronze_batch, "logger", real_logger)
     restart = ingest_sipni(spark, settings)  # restart: batch 1 is replayed
 
-    assert restart.rows > 0  # Spark really re-read the files of batch 1...
+    assert 1 in restart.batch_ids  # Spark really replayed micro-batch 1...
     history = spark.sql(f"DESCRIBE HISTORY delta.`{settings.paths.table_path(TABLE)}`")
     writes = history.filter("operation = 'WRITE'").count()
     assert writes == 2  # ...but Delta skipped the duplicate commit (batches 0 and 1 only)
