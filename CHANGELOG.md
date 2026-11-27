@@ -25,3 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   JSON Schema; Spark schemas generated from them; SemVer compatibility check in CI.
 - LGPD privacy assessment with measured re-identification risk and rules P1–P11; configurable
   small-cell suppression threshold.
+- Batch ingestion (`vaxlake download`, `reference`, `ingest`): resumable filtering downloader,
+  immutable landing zone with manifest, exactly-once bronze load (file source + checkpoint +
+  idempotent Delta writes), IBGE, SINASC (aggregated) and seeds; runbook.

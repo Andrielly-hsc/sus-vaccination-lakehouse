@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F02 — Source discovery & data contracts](../features/F02-source-discovery-and-data-contracts.md) |
-| **Status** | In Review |
+| **Status** | Done |
 | **Estimate** | 3 h |
 | **Depends on** | [F02-T04](F02-T04-data-contracts-odcs.md) |
 | **Branch** | `feat/F02-T05-contract-loader-and-schema-generation` |

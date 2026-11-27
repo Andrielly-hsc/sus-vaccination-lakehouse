@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | To Do |
+| **Status** | In Review |
 | **Priority** | Must (MoSCoW) |
 | **Depends on** | [F02](F02-source-discovery-and-data-contracts.md) |
 | **Estimate** | 14 h |
@@ -34,21 +34,21 @@ Load historical SI-PNI months and reference data into bronze Delta tables increm
 
 ## Acceptance criteria
 
-- [ ] Running `vaxlake ingest` twice adds 0 rows the second time
-- [ ] Every bronze row has `_ingested_at`, `_source_file`, `_file_hash`, `_batch_id`
-- [ ] Row counts reconcile: landing manifest = bronze rows per file
-- [ ] A corrupted file is isolated and reported, without blocking valid files
+- [x] Running `vaxlake ingest` twice adds 0 rows the second time
+- [x] Every bronze row has `_ingested_at`, `_source_file`, `_file_hash`, `_batch_id`
+- [x] Row counts reconcile: landing manifest = bronze rows per file
+- [x] Malformed rows are kept in `_corrupt_record` and reported without blocking the load; a landing file **modified after landing** deliberately stops the run before anything is written (unverifiable data never reaches bronze) — criterion refined during implementation
 
 ## Tasks
 
 | ID | Task | Estimate | Status |
 |---|---|---|---|
-| [F03-T01](../tasks/F03-T01-downloader.md) | Build a resumable, filtering downloader | 3 h | To Do |
-| [F03-T02](../tasks/F03-T02-landing-zone-layout.md) | Define the landing zone and manifest | 1 h | To Do |
-| [F03-T03](../tasks/F03-T03-bronze-batch-load.md) | Load CSV extracts into bronze Delta | 3 h | To Do |
-| [F03-T04](../tasks/F03-T04-incremental-idempotent-ingestion.md) | Make ingestion incremental and idempotent | 3 h | To Do |
-| [F03-T05](../tasks/F03-T05-reference-data-ingestion.md) | Ingest reference data | 2 h | To Do |
-| [F03-T06](../tasks/F03-T06-ingestion-tests.md) | Test the ingestion layer | 2 h | To Do |
+| [F03-T01](../tasks/F03-T01-downloader.md) | Build a resumable, filtering downloader | 3 h | In Review |
+| [F03-T02](../tasks/F03-T02-landing-zone-layout.md) | Define the landing zone and manifest | 1 h | In Review |
+| [F03-T03](../tasks/F03-T03-bronze-batch-load.md) | Load CSV extracts into bronze Delta | 3 h | In Review |
+| [F03-T04](../tasks/F03-T04-incremental-idempotent-ingestion.md) | Make ingestion incremental and idempotent | 3 h | In Review |
+| [F03-T05](../tasks/F03-T05-reference-data-ingestion.md) | Ingest reference data | 2 h | In Review |
+| [F03-T06](../tasks/F03-T06-ingestion-tests.md) | Test the ingestion layer | 2 h | In Review |
 
 ## Syllabus topics covered
 

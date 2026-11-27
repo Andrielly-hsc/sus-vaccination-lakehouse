@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F03 — Batch ingestion into bronze](../features/F03-batch-ingestion-bronze.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 3 h |
 | **Depends on** | [F03-T03](F03-T03-bronze-batch-load.md) |
 | **Branch** | `feat/F03-T04-incremental-idempotent-ingestion` |
@@ -21,9 +21,9 @@ Use Structured Streaming's file source with `trigger(availableNow=True)` and a c
 
 ## Acceptance criteria
 
-- [ ] Second run: 0 new rows, 0 files processed
-- [ ] A run killed mid-way and re-run produces no duplicates
-- [ ] Full refresh rebuilds identical row counts
+- [x] Second run: 0 new rows, 0 files processed
+- [x] A run killed mid-way and re-run produces no duplicates
+- [x] Full refresh rebuilds identical row counts
 
 ## Deliverables
 
@@ -36,4 +36,6 @@ This is the 'Auto Loader' pattern: let the engine track which files were process
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Auto Loader pattern: file source + checkpoint + `trigger(availableNow=True)` + `foreachBatch` with Delta `txnAppId`/`txnVersion`.
+- Integrity: landing files not yet in bronze are re-hashed before the stream starts (`verify_new_files`); `_file_hash` comes from the manifest inside Spark, and a file missing from the manifest is rejected by the `NOT NULL` constraint.
+- Real run: full refresh 3 min 41 s; re-run with nothing new **+0 rows in 74 s**; reconciliation OK in both. Runbook in `docs/runbook.md` §1.

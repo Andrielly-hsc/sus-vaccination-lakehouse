@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Feature** | [F03 — Batch ingestion into bronze](../features/F03-batch-ingestion-bronze.md) |
-| **Status** | To Do |
+| **Status** | In Review |
 | **Estimate** | 1 h |
 | **Depends on** | [F03-T01](F03-T01-downloader.md) |
 | **Branch** | `feat/F03-T02-landing-zone-layout` |
@@ -20,7 +20,7 @@ A predictable, immutable folder layout with a manifest describing every file.
 
 ## Acceptance criteria
 
-- [ ] Manifest and files agree (checked by a test)
+- [x] Manifest and files agree (checked by a test)
 
 ## Deliverables
 
@@ -33,4 +33,6 @@ An immutable landing zone is the safety net of a lakehouse: if every downstream 
 
 ## Notes
 
-_Add decisions, problems found and links to the PR here while working._
+- Implemented together with T01 (branch `feat/F03-T01-T02-downloader-and-landing`): the downloader is the only writer of the landing zone.
+- Parts of 500 000 rows (`ingestion.rows_per_file`) because gzip is not splittable: Jan/2025 → 1 ES part + 5 SP parts, 362 MB. The source ETag is in every file name, so a re-published month lands beside the old one (immutability).
+- Atomic writes: hidden `.name.tmp` then `os.replace`; Spark's file source ignores names starting with `.` or `_`, so `_manifest.jsonl` and temporary files are never read as data. gzip `mtime=0` makes parts byte-reproducible.
