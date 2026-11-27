@@ -38,7 +38,7 @@ each in its own Markdown file, versioned with the code.
 |---|---|---|---|---|---|---|
 | [F01](features/F01-project-setup.md) | Project setup & engineering standards | Must | — | 7 | 12 h | Done |
 | [F02](features/F02-source-discovery-and-data-contracts.md) | Source discovery & data contracts | Must | F01 | 6 | 16 h | Done |
-| [F03](features/F03-batch-ingestion-bronze.md) | Batch ingestion into bronze | Must | F02 | 6 | 14 h | In Progress |
+| [F03](features/F03-batch-ingestion-bronze.md) | Batch ingestion into bronze | Must | F02 | 6 | 14 h | In Review |
 | [F04](features/F04-streaming-simulation.md) | Real-time feed simulation & streaming bronze | Must | F03 | 6 | 15.5 h | To Do |
 | [F05](features/F05-silver-layer.md) | Silver layer — cleaned, validated, conformed | Must | F03, F04 | 6 | 15.5 h | To Do |
 | [F06](features/F06-gold-vaccination-indicators.md) | Gold layer — vaccination indicators | Must | F05 | 6 | 15.5 h | To Do |

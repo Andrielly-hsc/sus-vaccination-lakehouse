@@ -87,28 +87,46 @@ a **5-digit CEP prefix**); the facility name column keeps the typo `no_fantasia_
 
 ### 1.6 Registration lag — the data really arrives late
 
-Lag = `dt_entrada_rnds − dt_vacina`, in days, on the 50 000-row sample:
+Lag = `dt_entrada_rnds − dt_vacina`, in days.
 
-| Statistic | Value |
-|---|---|
-| Median | **31 days** |
-| 90th percentile | 58 days |
-| 99th percentile | 363 days |
-| Maximum | 583 days |
-| Registered the same day | 22.4 % |
-| Within 7 days | 31.6 % |
-| Within 30 days | 49.0 % |
-| Within 60 days | 90.4 % |
-| Registered *before* vaccination | 0 |
+| Statistic | 50 000-row sample (F02) | **Full month, ES + SP (F03)** |
+|---|---:|---:|
+| Rows | 49 999 | **2 748 844** |
+| Median | 31 days | **10 days** |
+| 90th percentile | 58 days | 58 days |
+| 99th percentile | 363 days | 443 days |
+| Maximum | 583 days | 587 days |
+| Registered the same day | 22.4 % | 34.0 % |
+| Within 7 days | 31.6 % | 47.7 % |
+| Within 30 days | 49.0 % | 60.7 % |
+| Within 60 days | 90.4 % | 90.8 % |
+| Registered *before* vaccination | 0 | 0 |
 
-The sample is the **first** 50 000 rows of the file, so it may be biased by the file's internal
-order (its `dt_entrada_rnds` is concentrated in Feb/2025). The full distribution is measured on
-the complete scope in F03 and reported per municipality in F06-T05.
+**The sample was biased**, as suspected in F02: it was the *first* rows of the national file,
+whose order follows the load into the RNDS. The full month (Jan/2025, every row of ES and SP,
+measured on `bronze.sipni_doses_raw`) is the reference from now on.
+
+The lag differs sharply between states and, above all, between **source systems**:
+
+| Slice | Rows | Median lag | Within 7 days |
+|---|---:|---:|---:|
+| UF ES | 272 164 | **0 days** | **93.7 %** |
+| UF SP | 2 476 680 | **25 days** | **42.7 %** |
+| System *ESUS APS - NACIONAL (OFFLINE)* | 977 673 | 39 days | |
+| System *SIGA Saúde* (São Paulo city) | 508 786 | 1 day | |
+| System *Novo PNI* | 271 356 | 0 days | |
+| System *VACINA E CONFIA ES* | 269 757 | 0 days | |
+| System *VACIVIDA* (São Paulo state) | 193 003 | 52 days | |
+
+This is the accountability story in one table: timeliness depends on *how* a municipality
+registers (offline systems that sync in batches vs. online systems), which F06-T05 reports per
+municipality and facility.
 
 Implications:
 
-- "Real time" for this source means **provisional**: on any given day only about a quarter of that
-  day's doses are already in the national system. The dashboard must say so (F11-T03).
+- "Real time" for this source means **provisional**: on any given day only about a third of that
+  day's doses (34 %) are already in the national system — far less in SP. The dashboard must say
+  so (F11-T03).
 - The replayer (F04-T02) derives each event's delay from this real lag distribution.
 - The streaming watermark (F05-T04) cannot wait 583 days: events beyond it go to
   `silver.late_arrivals` and the batch path reconciles them.
@@ -215,10 +233,16 @@ technical study (2026), a secondary source citing the national calendar — see 
 - `dt_entrada_rnds` is a date, not a timestamp, despite the dictionary.
 - 1.6 % of rows have no residence municipality; 10.9 % have no facility type and no
   administration route/site.
-- 1 % of documents replace an earlier document (`co_troca_documento`).
-- A 2021 technical note by Transparência Brasil reported duplicates and the absence of a unique
-  patient key in the COVID-19 vaccination open data
-  (<https://www.transparencia.org.br/downloads/publicacoes/Nota_Tecnica_Vacinacao_04032021.pdf>);
-  to be checked on the routine data in F05.
+- 1 % of documents replace an earlier document in the sample; **2.4 % (67 130)** in the full
+  month of ES + SP.
+- **Full month, ES + SP (F03):** 0 malformed rows, 0 repeated `co_documento`, 0 vaccination dates
+  outside the month, `st_documento` always `final`, `dt_deletado_rnds` always empty.
+- **Probable duplicate registrations:** 14 709 groups of rows with the same patient, vaccine,
+  dose code and vaccination date (30 045 rows, i.e. ~15 300 surplus rows, 0.56 %) — each with its
+  own `co_documento`. A 2021 technical note by Transparência Brasil had reported duplicates in the
+  COVID-19 data (<https://www.transparencia.org.br/downloads/publicacoes/Nota_Tecnica_Vacinacao_04032021.pdf>),
+  and NT 90/2025-DPNI describes the same problem. Silver keeps them (they are distinct
+  documents) and flags them; the individual-based coverage counts each person once anyway
+  (decision in F05).
 - Coverage computed from doses and SINASC can exceed 100 % (denominator issues, vaccination
   outside the municipality of residence).
