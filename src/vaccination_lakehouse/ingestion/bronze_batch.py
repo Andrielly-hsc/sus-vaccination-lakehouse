@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import shutil
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -51,6 +52,7 @@ class LandingIntegrityError(RuntimeError):
 class IngestResult:
     batches: int
     rows: int
+    batch_ids: tuple[int, ...] = ()
 
 
 def read_landing(spark: SparkSession, settings: Settings, contract: SchemaObject) -> DataFrame:
@@ -82,18 +84,31 @@ def _txn_app_id(checkpoint: Path) -> str:
     return marker.read_text(encoding="utf-8").strip()
 
 
-def _file_hashes(files: list[str], manifest: Manifest) -> dict[str, str]:
-    """SHA-256 of each landing file, checked against the manifest when it has the file."""
-    recorded = {Path(e.path).name: e.sha256 for e in manifest.files("sipni")}
-    hashes = {}
-    for uri in files:
-        local = Path(unquote(urlparse(uri).path))  # file:///… URI, percent-encoded
-        actual = sha256_file(local)
-        expected = recorded.get(local.name)
-        if expected and expected != actual:
+def loaded_files(spark: SparkSession, path: Path) -> set[str]:
+    """Names of the landing files already in bronze (reads a single column)."""
+    if not (path / "_delta_log").exists():
+        return set()
+    rows = spark.read.format("delta").load(str(path)).select("_source_file").distinct().collect()
+    return {Path(unquote(urlparse(r[0]).path)).name for r in rows}
+
+
+def verify_new_files(spark: SparkSession, settings: Settings, manifest: Manifest) -> int:
+    """Re-hash the landing files not yet in bronze; fail if one changed after landing.
+
+    Landing is immutable: a mismatch means someone edited a file, and loading it would put
+    unverifiable data in bronze. Already-loaded files are not re-hashed (cost grows with new
+    data only).
+    """
+    done = loaded_files(spark, settings.paths.table_path(TABLE))
+    checked = 0
+    for entry in manifest.files("sipni"):
+        local = settings.paths.landing_dir / entry.path
+        if local.name in done or not local.exists():
+            continue
+        if sha256_file(local) != entry.sha256:
             raise LandingIntegrityError(f"{local.name} changed after landing (hash mismatch)")
-        hashes[uri] = actual
-    return hashes
+        checked += 1
+    return checked
 
 
 def ingest_sipni(
@@ -113,28 +128,33 @@ def ingest_sipni(
         shutil.rmtree(checkpoint, ignore_errors=True)
         checkpoint.parent.joinpath(f"{checkpoint.name}.txn_app_id").unlink(missing_ok=True)
 
+    started = time.monotonic()
     ensure_table(
         spark, contract, path, {"layer": "bronze", "contract_id": "vaxlake-bronze-sipni-doses-raw"}
     )
     manifest = Manifest(sipni_dir(settings.paths.landing_dir) / MANIFEST_NAME)
+    new_files = verify_new_files(spark, settings, manifest)
+    logger.info(
+        "pre-flight: %d new landing files verified in %.1fs", new_files, time.monotonic() - started
+    )
+
     app_id = _txn_app_id(checkpoint)
     columns = contract.columns
+    # File name → SHA-256 recorded at landing time. Looked up per row inside Spark: no extra
+    # scan or cache of the micro-batch. A file missing from the manifest gets a null hash and
+    # the NOT NULL constraint on _file_hash rejects the write.
+    hashes = {Path(e.path).name: e.sha256 for e in manifest.files("sipni")}
+    hash_map = (
+        F.create_map(*[F.lit(x) for pair in hashes.items() for x in pair]) if hashes else None
+    )
+    file_name = F.regexp_extract(F.col("_source_file"), r"([^/]+)$", 1)
 
     def write_batch(batch: DataFrame, batch_id: int) -> None:
-        batch = batch.persist()  # used twice: list the files, then write the rows
-        try:
-            files = [r[0] for r in batch.select("_source_file").distinct().collect()]
-            if files:
-                _write(batch, batch_id, files)
-        finally:
-            batch.unpersist()
-
-    def _write(batch: DataFrame, batch_id: int, files: list[str]) -> None:
-        hashes = _file_hashes(files, manifest)
-        mapping = F.create_map(*[F.lit(x) for pair in hashes.items() for x in pair])
+        batch_started = time.monotonic()
+        file_hash = hash_map[file_name] if hash_map is not None else F.lit(None).cast("string")
         out = batch.withColumns(
             {
-                "_file_hash": mapping[F.col("_source_file")],
+                "_file_hash": file_hash,
                 "_batch_id": F.lit(f"{RUN_ID}-{batch_id}"),
                 "_ingested_at": F.current_timestamp(),
                 "_ingest_date": F.current_date(),
@@ -147,7 +167,7 @@ def ingest_sipni(
             .option("txnVersion", batch_id)
             .save(str(path))
         )
-        logger.info("bronze batch %d: %d files", batch_id, len(files))
+        logger.info("bronze batch %d written in %.1fs", batch_id, time.monotonic() - batch_started)
 
     writer = (
         read_landing(spark, settings, contract)
@@ -165,8 +185,16 @@ def ingest_sipni(
     progress = query.recentProgress
     rows = sum(p.get("numInputRows", 0) for p in progress)
     batches = sum(1 for p in progress if p.get("numInputRows", 0) > 0)
-    logger.info("bronze ingestion finished: %d rows in %d batches", rows, batches)
-    return IngestResult(batches, rows)
+    batch_ids = tuple(
+        sorted({p["batchId"] for p in progress if p.get("durationMs", {}).get("addBatch")})
+    )
+    logger.info(
+        "bronze ingestion finished: %d rows in %d batches, %.1fs in total",
+        rows,
+        batches,
+        time.monotonic() - started,
+    )
+    return IngestResult(batches, rows, batch_ids)
 
 
 def reconcile(spark: SparkSession, settings: Settings) -> list[str]:

@@ -23,6 +23,11 @@ spark:
     # Delta reads its transaction log with 50 partitions by default, sized for clusters.
     # Our logs are small, so fewer partitions avoid scheduling dozens of tiny tasks.
     spark.databricks.delta.snapshotPartitions: "8"
+    # Partitioned writes sort every row by the partition columns before writing (default 0
+    # writers = sort-based). Bronze writes one _ingest_date per batch, so the sort is useless
+    # and, with 63 text columns in 3 GB, it spills to disk: 604 s -> 64 s for one month with
+    # concurrent writers (docs/performance.md, experiment 1).
+    spark.sql.maxConcurrentOutputFileWriters: "4"
 
 privacy:
   suppression_threshold: 5  # small-cell suppression k (docs/data/privacy_assessment.md, P6)
